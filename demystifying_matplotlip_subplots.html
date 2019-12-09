@@ -20,7 +20,9 @@ fig, ax= plt.subplots()</p>
 <p>However, it isn't always obvious what this powerful function is doing behind the scenes. In this post, we explore what it means and how we can utilize subplots for powerful visualizations.
 The subplot function accepts, nrows &amp; ncols as parameters. Setting nrows=2 and ncols=2 creates a 2<em>2 grid that can be filled with 4 graphs (by default subplots creates a 1</em>1 grid for one graph). We can also have shared axes between all the graphs by setting sharex=True and/or sharey=True.</p>
 <p>The subplot() function returns figure and axes objects. The figure (fig) acts as a container for all the subplots. By manipulating fig we can make changes to our entire graphing area but not to individual plots.</p>
-<p>Here are some useful operations on fig:</p>
+<h4>Subplotting our data with no formatting:</h4>
+<p><img src="images/first.png"></p>
+<h4>Here are some useful operations on fig:</h4>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.random</span>
@@ -46,11 +48,8 @@ The subplot function accepts, nrows &amp; ncols as parameters. Setting nrows=2 a
 </pre></div>
 
 
-<div class="highlight"><pre><span></span><span class="o">/</span><span class="n">anaconda3</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="p">.</span><span class="mi">6</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">ipykernel_launcher</span><span class="p">.</span><span class="n">py</span><span class="p">:</span><span class="mi">19</span><span class="p">:</span> <span class="n">RuntimeWarning</span><span class="p">:</span> <span class="n">invalid</span> <span class="n">value</span> <span class="n">encountered</span> <span class="k">in</span> <span class="n">sqrt</span>
-</pre></div>
-
-
-<p><img alt="png" src="output_2_1.png"></p>
+<h4>After some formatting with the fig object:</h4>
+<p><img src="images/middle.png"></p>
 <p>We can also achieve greater control in positioning for our subplots by calling plt.subplots_adjust()
     <img src="images/adjust.png"></p>
 <p>The axes object (ax) returned by the subplot helps us control each individual graph or plot. In our case, we have created a 2 * 2 grid. The graph on the left can be manipulated by using axes[0, 0].
@@ -83,11 +82,8 @@ This lets us add individual styling to each graph. We can also use loops to prog
 </pre></div>
 
 
-<div class="highlight"><pre><span></span><span class="o">/</span><span class="n">anaconda3</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="p">.</span><span class="mi">6</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">ipykernel_launcher</span><span class="p">.</span><span class="n">py</span><span class="p">:</span><span class="mi">8</span><span class="p">:</span> <span class="n">RuntimeWarning</span><span class="p">:</span> <span class="n">invalid</span> <span class="n">value</span> <span class="n">encountered</span> <span class="k">in</span> <span class="n">sqrt</span>
-</pre></div>
-
-
-<p><img alt="png" src="output_5_1.png"></p>
+<h4>Adding formatting to individual plots with ax:</h4>
+<p><img src="images/final.png"></p>
 <p>This is a brief introduction to subplots. Matplotlib is a powerful library with several customization options. Here are links to official documentation.
 <br>
 <a href="https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.figure.Figure.html#matplotlib.figure.Figure.add_subplot"> Figure </a>
@@ -98,6 +94,7 @@ This lets us add individual styling to each graph. We can also use loops to prog
 <br>
 <a href="https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.lines.Line2D.html#matplotlib.lines.Line2D"> Formatting options for lines</a>
 <br>    </p>
+<h3>All our formatting operations in sequence:</h3>
 <p><img src="images/add-text.gif"></p>
  </div>
 </div>

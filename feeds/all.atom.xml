@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>dark_coffee</title><link href="https://rittik97.github.io/Blog/" rel="alternate"></link><link href="https://rittik97.github.io/Blog/feeds/all.atom.xml" rel="self"></link><id>https://rittik97.github.io/Blog/</id><updated>2019-12-08T20:57:00-05:00</updated><entry><title>Demystifying matplotlip subplots</title><link href="https://rittik97.github.io/Blog/demystifying_matplotlip_subplots.html" rel="alternate"></link><published>2019-12-08T20:57:00-05:00</published><updated>2019-12-08T20:57:00-05:00</updated><author><name>Rittik Ghosh</name></author><id>tag:rittik97.github.io,2019-12-08:/Blog/demystifying_matplotlip_subplots.html</id><summary type="html">&lt;h1&gt;Demystifying matplotlip subplots&lt;/h1&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>dark_coffee</title><link href="https://rittik97.github.io/Blog/" rel="alternate"></link><link href="https://rittik97.github.io/Blog/feeds/all.atom.xml" rel="self"></link><id>https://rittik97.github.io/Blog/</id><updated>2019-12-08T21:06:00-05:00</updated><entry><title>Demystifying matplotlip subplots</title><link href="https://rittik97.github.io/Blog/demystifying_matplotlip_subplots.html" rel="alternate"></link><published>2019-12-08T21:06:00-05:00</published><updated>2019-12-08T21:06:00-05:00</updated><author><name>Rittik Ghosh</name></author><id>tag:rittik97.github.io,2019-12-08:/Blog/demystifying_matplotlip_subplots.html</id><summary type="html">&lt;h1&gt;Demystifying matplotlip subplots&lt;/h1&gt;
 &lt;p&gt;Everyone who has explored visualizations in python has encountered the famous:
 fig, ax= plt.subplots()&lt;/p&gt;
 &lt;p&gt;However, it isn't always obvious what this powerful function is doing behind the scenes. In this post, we explore what it means and how we can utilize subplots for powerful visualizations.
@@ -9,7 +9,9 @@ fig, ax= plt.subplots()&lt;/p&gt;
 &lt;p&gt;However, it isn't always obvious what this powerful function is doing behind the scenes. In this post, we explore what it means and how we can utilize subplots for powerful visualizations.
 The subplot function accepts, nrows &amp;amp; ncols as parameters. Setting nrows=2 and ncols=2 creates a 2&lt;em&gt;2 grid that can be filled with 4 graphs (by default subplots creates a 1&lt;/em&gt;1 grid for one graph). We can also have shared axes between all the graphs by setting sharex=True and/or sharey=True.&lt;/p&gt;
 &lt;p&gt;The subplot() function returns figure and axes objects. The figure (fig) acts as a container for all the subplots. By manipulating fig we can make changes to our entire graphing area but not to individual plots.&lt;/p&gt;
-&lt;p&gt;Here are some useful operations on fig:&lt;/p&gt;
+&lt;h4&gt;Subplotting our data with no formatting:&lt;/h4&gt;
+&lt;p&gt;&lt;img src="images/first.png"&gt;&lt;/p&gt;
+&lt;h4&gt;Here are some useful operations on fig:&lt;/h4&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;matplotlib.pyplot&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;plt&lt;/span&gt;
 &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;numpy&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;np&lt;/span&gt;
 &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;numpy.random&lt;/span&gt;
@@ -35,11 +37,8 @@ The subplot function accepts, nrows &amp;amp; ncols as parameters. Setting nrows
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;anaconda3&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;lib&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;python3&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;site&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;packages&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;ipykernel_launcher&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;19&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;RuntimeWarning&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;invalid&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt; &lt;span class="n"&gt;encountered&lt;/span&gt; &lt;span class="k"&gt;in&lt;/span&gt; &lt;span class="n"&gt;sqrt&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;&lt;img alt="png" src="output_2_1.png"&gt;&lt;/p&gt;
+&lt;h4&gt;After some formatting with the fig object:&lt;/h4&gt;
+&lt;p&gt;&lt;img src="images/middle.png"&gt;&lt;/p&gt;
 &lt;p&gt;We can also achieve greater control in positioning for our subplots by calling plt.subplots_adjust()
     &lt;img src="images/adjust.png"&gt;&lt;/p&gt;
 &lt;p&gt;The axes object (ax) returned by the subplot helps us control each individual graph or plot. In our case, we have created a 2 * 2 grid. The graph on the left can be manipulated by using axes[0, 0].
@@ -72,11 +71,8 @@ This lets us add individual styling to each graph. We can also use loops to prog
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;anaconda3&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;lib&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;python3&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;site&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;packages&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;ipykernel_launcher&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;RuntimeWarning&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;invalid&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt; &lt;span class="n"&gt;encountered&lt;/span&gt; &lt;span class="k"&gt;in&lt;/span&gt; &lt;span class="n"&gt;sqrt&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;&lt;img alt="png" src="output_5_1.png"&gt;&lt;/p&gt;
+&lt;h4&gt;Adding formatting to individual plots with ax:&lt;/h4&gt;
+&lt;p&gt;&lt;img src="images/final.png"&gt;&lt;/p&gt;
 &lt;p&gt;This is a brief introduction to subplots. Matplotlib is a powerful library with several customization options. Here are links to official documentation.
 &lt;br&gt;
 &lt;a href="https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.figure.Figure.html#matplotlib.figure.Figure.add_subplot"&gt; Figure &lt;/a&gt;
@@ -87,6 +83,7 @@ This lets us add individual styling to each graph. We can also use loops to prog
 &lt;br&gt;
 &lt;a href="https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.lines.Line2D.html#matplotlib.lines.Line2D"&gt; Formatting options for lines&lt;/a&gt;
 &lt;br&gt;    &lt;/p&gt;
+&lt;h3&gt;All our formatting operations in sequence:&lt;/h3&gt;
 &lt;p&gt;&lt;img src="images/add-text.gif"&gt;&lt;/p&gt;</content><category term="misc"></category></entry><entry><title>My SSSSecond Blog</title><link href="https://rittik97.github.io/Blog/blog2.html" rel="alternate"></link><published>2019-12-06T11:35:00-05:00</published><updated>2019-12-06T11:35:00-05:00</updated><author><name>Rittik Ghosh</name></author><id>tag:rittik97.github.io,2019-12-06:/Blog/blog2.html</id><summary type="html">&lt;p&gt;This is my second blog post&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;IPython.core.display&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;HTML&lt;/span&gt;
 &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;pandas&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;pd&lt;/span&gt;
