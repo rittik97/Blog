@@ -146,7 +146,7 @@ start with any positive integer, if it is even divide it by two. If it is odd, t
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="images/png" src="output_7_1.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="png" src="images/output_7_1.png"&gt;&lt;/p&gt;
 &lt;p&gt;The collatz function can also be represented as:
 &lt;img src='images/math1.gif'&gt;&lt;/p&gt;
 &lt;p&gt;This is a holomorphic function, and can be used to create fractals akin to the Julia set of fractals. 
@@ -171,13 +171,13 @@ The traditional fractal pattern colors points that escape to infinity with light
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="images/png" src="output_10_0.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="png" src="images/output_10_0.png"&gt;&lt;/p&gt;
 &lt;p&gt;Expanding the input range we get:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;collatz_escape&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;linspace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mf"&gt;12.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mf"&gt;12.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;10000&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;linspace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mf"&gt;12.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mf"&gt;12.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;10000&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;maxiter&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="images/png" src="output_12_0.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="png" src="images/output_12_0.png"&gt;&lt;/p&gt;
 &lt;p&gt;This isn't as interesting but I was bored on a Sunday afternoon. It is a set of identical matrices colored based on the length of the collatz sequence corresponding to the row index + column index. Does it remind you of something?&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;zeros&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="mi"&gt;500&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;500&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
 
@@ -203,7 +203,7 @@ The traditional fractal pattern colors points that escape to infinity with light
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="images/png" src="output_15_0.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="png" src="images/output_15_0.png"&gt;&lt;/p&gt;
 &lt;h4&gt; XKCD on the Collatz Conjecture: &lt;/h4&gt;
 
 &lt;p&gt;&lt;img src='images/collatz_conjecture_xkcd.png'&gt;&lt;/p&gt;</content><category term="misc"></category></entry><entry><title>Demystifying matplotlib subplots</title><link href="https://rittik97.github.io/Blog/demystifying_matplotlib_subplots.html" rel="alternate"></link><published>2019-12-08T23:19:00-05:00</published><updated>2019-12-08T23:19:00-05:00</updated><author><name>Rittik Ghosh</name></author><id>tag:rittik97.github.io,2019-12-08:/Blog/demystifying_matplotlib_subplots.html</id><summary type="html">&lt;h1&gt;Demystifying matplotlib subplots&lt;/h1&gt;
