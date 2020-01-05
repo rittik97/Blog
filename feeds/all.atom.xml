@@ -160,7 +160,7 @@
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="png" src="images/output_10_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="png" src="images/output_10_1.png"&gt;&lt;/p&gt;
 &lt;p&gt;We can observe stark changes to the shapes of the decision boundary and to performance as p varies. However these trends can not be generalized, and performance depends on the shape of the input data.&lt;/p&gt;</content><category term="misc"></category></entry><entry><title>Visualizing the Collatz Conjecture using Altair &amp; Matplotlib</title><link href="https://rittik97.github.io/Blog/collatz_conjecture.html" rel="alternate"></link><published>2019-12-27T11:35:00-05:00</published><updated>2019-12-27T11:35:00-05:00</updated><author><name>Rittik Ghosh</name></author><id>tag:rittik97.github.io,2019-12-27:/Blog/collatz_conjecture.html</id><summary type="html">&lt;p&gt;Introduced by Lothar Collatz in 1937, the conjecture can be defined as:
 start with any positive integer, if it is even divide it by two. If it is odd, triple it and add one. Now repeat this procedure to generate a sequence.&lt;/p&gt;
 &lt;p&gt;The great unsolved question in mathematics is to …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Introduced by Lothar Collatz in 1937, the conjecture can be defined as:
