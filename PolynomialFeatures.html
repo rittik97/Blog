@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <title>Applying PolynomialFeatures() to a subset of features in your pipeline using ColumnTransformer</title>
+ <!-- Latest compiled and minified CSS -->
+ <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+ <div class="container">
+  <h1><a href=".">dark_coffee</a></h1>
+ </div>
+</head>
+<body>
+ <div class="container">
+<div class="row">
+ <div class="col-md-8">
+  <h3>Applying PolynomialFeatures() to a subset of features in your pipeline using ColumnTransformer</h3>
+  <label>2020-01-12</label>
+  <p><a href='https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PolynomialFeatures.html'
+   alt='Polynomial Features'>Polynomial Features</a>, which is a part of sklearn.preprocessing, allows us to feed interactions between input features to our model. It also allows us to generate higher order versions of our input features. This functionality helps us explore non-linear relationships such as income with age. It also helps us explore interactions between features, such as #bathrooms * #bedrooms while predicting real estate prices. However, this operation can lead to a dramatic increase in the number of features. The sklearn documentation warns us of this: </p>
+<p>Be aware that the number of features in the output array scales polynomially in the number of features of the input array, and exponentially in the degree. High degrees can cause overfitting.</p>
+<p>While a powerful addition to any feature engineering toolkit, this and some other sklearn functions do not allow us to specify which columns to operate on. This can lead to a significant increase in the size of our data when the number of input features is high. As data scientists, we must always beware the <a href="https://www.kdnuggets.com/2017/04/must-know-curse-dimensionality.html" alt='curse of dimensionality'>curse of dimensionality</a>.</p>
+<div class="highlight"><pre><span></span><span class="c1">#Import necessary packages</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_squared_error</span><span class="p">,</span> <span class="n">r2_score</span>
+<span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">make_pipeline</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span> <span class="nn">sklearn.compose</span> <span class="kn">import</span> <span class="n">ColumnTransformer</span>
+<span class="kn">from</span> <span class="nn">sklearn.impute</span> <span class="kn">import</span> <span class="n">SimpleImputer</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">LabelBinarizer</span><span class="p">,</span> <span class="n">StandardScaler</span>
+<span class="p">,</span> <span class="n">LabelEncoder</span><span class="p">,</span> <span class="n">PolynomialFeatures</span><span class="p">,</span> <span class="n">FunctionTransformer</span>
+<span class="kn">from</span> <span class="nn">sklearn_pandas</span> <span class="kn">import</span> <span class="n">DataFrameMapper</span>
+<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LassoCV</span>
+
+<span class="c1"># Load the Tips dataset</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;tips&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
+<span class="n">temp</span><span class="o">=</span><span class="n">data</span>
+
+<span class="n">y</span><span class="o">=</span><span class="n">temp</span><span class="p">[</span><span class="s1">&#39;tip&#39;</span><span class="p">]</span>
+<span class="n">X</span><span class="o">=</span><span class="n">temp</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;tip&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>   <span class="n">total_bill</span>   <span class="n">tip</span>     <span class="n">sex</span> <span class="n">smoker</span>  <span class="k">day</span>    <span class="n">time</span>  <span class="k">size</span>
+<span class="mi">0</span>       <span class="mi">16</span><span class="p">.</span><span class="mi">99</span>  <span class="mi">1</span><span class="p">.</span><span class="mi">01</span>  <span class="n">Female</span>     <span class="k">No</span>  <span class="n">Sun</span>  <span class="n">Dinner</span>     <span class="mi">2</span>
+<span class="mi">1</span>       <span class="mi">10</span><span class="p">.</span><span class="mi">34</span>  <span class="mi">1</span><span class="p">.</span><span class="mi">66</span>    <span class="n">Male</span>     <span class="k">No</span>  <span class="n">Sun</span>  <span class="n">Dinner</span>     <span class="mi">3</span>
+<span class="mi">2</span>       <span class="mi">21</span><span class="p">.</span><span class="mi">01</span>  <span class="mi">3</span><span class="p">.</span><span class="mi">50</span>    <span class="n">Male</span>     <span class="k">No</span>  <span class="n">Sun</span>  <span class="n">Dinner</span>     <span class="mi">3</span>
+<span class="mi">3</span>       <span class="mi">23</span><span class="p">.</span><span class="mi">68</span>  <span class="mi">3</span><span class="p">.</span><span class="mi">31</span>    <span class="n">Male</span>     <span class="k">No</span>  <span class="n">Sun</span>  <span class="n">Dinner</span>     <span class="mi">2</span>
+<span class="mi">4</span>       <span class="mi">24</span><span class="p">.</span><span class="mi">59</span>  <span class="mi">3</span><span class="p">.</span><span class="mi">61</span>  <span class="n">Female</span>     <span class="k">No</span>  <span class="n">Sun</span>  <span class="n">Dinner</span>     <span class="mi">4</span>
+
+
+<span class="o">&lt;</span><span class="k">class</span> <span class="s1">&#39;pandas.core.frame.DataFrame&#39;</span><span class="o">&gt;</span>
+<span class="n">RangeIndex</span><span class="p">:</span> <span class="mi">244</span> <span class="n">entries</span><span class="p">,</span> <span class="mi">0</span> <span class="k">to</span> <span class="mi">243</span>
+<span class="k">Data</span> <span class="n">columns</span> <span class="p">(</span><span class="n">total</span> <span class="mi">7</span> <span class="n">columns</span><span class="p">):</span>
+<span class="n">total_bill</span>    <span class="mi">244</span> <span class="n">non</span><span class="o">-</span><span class="k">null</span> <span class="n">float64</span>
+<span class="n">tip</span>           <span class="mi">244</span> <span class="n">non</span><span class="o">-</span><span class="k">null</span> <span class="n">float64</span>
+<span class="n">sex</span>           <span class="mi">244</span> <span class="n">non</span><span class="o">-</span><span class="k">null</span> <span class="n">category</span>
+<span class="n">smoker</span>        <span class="mi">244</span> <span class="n">non</span><span class="o">-</span><span class="k">null</span> <span class="n">category</span>
+<span class="k">day</span>           <span class="mi">244</span> <span class="n">non</span><span class="o">-</span><span class="k">null</span> <span class="n">category</span>
+<span class="n">time</span>          <span class="mi">244</span> <span class="n">non</span><span class="o">-</span><span class="k">null</span> <span class="n">category</span>
+<span class="k">size</span>          <span class="mi">244</span> <span class="n">non</span><span class="o">-</span><span class="k">null</span> <span class="n">int64</span>
+<span class="n">dtypes</span><span class="p">:</span> <span class="n">category</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">float64</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">int64</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">memory</span> <span class="k">usage</span><span class="p">:</span> <span class="mi">7</span><span class="p">.</span><span class="mi">3</span> <span class="n">KB</span>
+<span class="k">None</span>
+</pre></div>
+
+
+<p>We are going to use a data frame mapper to apply customized transformations to each of the categorical features in our dataset. For numeric features, we sequentially perform Imputation, Standard Scaling, and then polynomial feature transformation. In this example, the polynomial feature transformation is applied only to two columns, 'total_bill' and 'size'.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">unwrap</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="n">mapper</span> <span class="o">=</span> <span class="n">DataFrameMapper</span><span class="p">([</span>
+    <span class="p">([</span><span class="s1">&#39;sex&#39;</span><span class="p">],</span> <span class="p">[</span><span class="n">SimpleImputer</span><span class="p">(</span><span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;missing&#39;</span><span class="p">)</span>
+               <span class="p">,</span><span class="n">FunctionTransformer</span><span class="p">(</span><span class="n">unwrap</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+               <span class="p">,</span><span class="n">LabelEncoder</span><span class="p">()]),</span>
+    <span class="p">(</span><span class="s1">&#39;smoker&#39;</span><span class="p">,</span> <span class="n">LabelEncoder</span><span class="p">()),</span>
+    <span class="p">([</span><span class="s1">&#39;day&#39;</span><span class="p">],</span> <span class="p">[</span><span class="n">SimpleImputer</span><span class="p">(</span><span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;most_frequent&#39;</span><span class="p">)</span>
+               <span class="p">,</span><span class="n">FunctionTransformer</span><span class="p">(</span><span class="n">unwrap</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+               <span class="p">,</span><span class="n">LabelBinarizer</span><span class="p">()]),</span>
+    <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">LabelEncoder</span><span class="p">())</span>
+<span class="p">],</span> <span class="n">df_out</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">numeric_features</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;total_bill&#39;</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">]</span>
+<span class="n">transformer1</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;imputer&#39;</span><span class="p">,</span> <span class="n">SimpleImputer</span><span class="p">(</span><span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;median&#39;</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;scaler&#39;</span><span class="p">,</span> <span class="n">StandardScaler</span><span class="p">()),</span>
+    <span class="p">(</span><span class="s1">&#39;poly&#39;</span><span class="p">,</span> <span class="n">PolynomialFeatures</span><span class="p">())</span>
+
+<span class="p">])</span>
+
+<span class="n">categorical_features</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sex&#39;</span><span class="p">,</span><span class="s1">&#39;smoker&#39;</span><span class="p">,</span><span class="s1">&#39;day&#39;</span><span class="p">,</span><span class="s1">&#39;time&#39;</span><span class="p">]</span>
+<span class="n">transformer2</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[</span>
+
+    <span class="p">(</span><span class="s1">&#39;mapper&#39;</span><span class="p">,</span> <span class="n">mapper</span> <span class="p">)])</span>
+
+<span class="n">transformer</span> <span class="o">=</span> <span class="n">ColumnTransformer</span><span class="p">(</span>
+    <span class="n">transformers</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">(</span><span class="s1">&#39;numeric_transformer&#39;</span><span class="p">,</span> <span class="n">transformer1</span><span class="p">,</span> <span class="n">numeric_features</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;categorical_transformer&#39;</span><span class="p">,</span> <span class="n">transformer2</span><span class="p">,</span> <span class="n">categorical_features</span><span class="p">)</span>
+    <span class="p">])</span>
+
+
+<span class="n">X_train</span><span class="o">=</span><span class="n">transformer</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+<span class="n">X_train</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="err">(195, 13)</span>
+</pre></div>
+
+
+<p>As we can see, the number of features has expanded to 13. 
+<ul>
+<li> 4 from PolynomialFeatures() being applied to 'total_bill','size'
+<li> 4 from LabelBinarizer() being applied to 'day'
+<li> Remaing 5 represent 'sex','smoker','size','time' ,'total_bill'
+</ul></p>
+<p>It isn't necessary to seperate columns into numeric and categorical. Below we apply polynomial feature transformation to 'day', 'total_bill', 'time', 'size'.</p>
+<div class="highlight"><pre><span></span><span class="n">mapper</span> <span class="o">=</span> <span class="n">DataFrameMapper</span><span class="p">([</span>
+    <span class="p">([</span><span class="s1">&#39;sex&#39;</span><span class="p">],</span> <span class="p">[</span><span class="n">SimpleImputer</span><span class="p">(</span><span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;missing&#39;</span><span class="p">)</span>
+               <span class="p">,</span><span class="n">FunctionTransformer</span><span class="p">(</span><span class="n">unwrap</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+               <span class="p">,</span><span class="n">LabelEncoder</span><span class="p">()]),</span>
+    <span class="p">(</span><span class="s1">&#39;smoker&#39;</span><span class="p">,</span> <span class="n">LabelEncoder</span><span class="p">()),</span>
+<span class="p">],</span> <span class="n">df_out</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">mapper2</span> <span class="o">=</span> <span class="n">DataFrameMapper</span><span class="p">([</span>
+    <span class="p">(</span><span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="n">LabelBinarizer</span><span class="p">()),</span>
+    <span class="p">([</span><span class="s1">&#39;total_bill&#39;</span><span class="p">],</span> <span class="n">StandardScaler</span><span class="p">()),</span>
+    <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">LabelEncoder</span><span class="p">()),</span>
+    <span class="p">(</span><span class="s1">&#39;size&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+<span class="p">],</span> <span class="n">df_out</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">features_set_one</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;total_bill&#39;</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">,</span><span class="s1">&#39;time&#39;</span><span class="p">,</span><span class="s1">&#39;day&#39;</span><span class="p">]</span>
+<span class="n">transformer1</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[</span>
+
+    <span class="p">(</span><span class="s1">&#39;mapper2&#39;</span><span class="p">,</span> <span class="n">mapper2</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;poly&#39;</span><span class="p">,</span> <span class="n">PolynomialFeatures</span><span class="p">())</span>
+
+<span class="p">])</span>
+
+<span class="n">features_set_two</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sex&#39;</span><span class="p">,</span><span class="s1">&#39;smoker&#39;</span><span class="p">]</span>
+<span class="n">transformer2</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[</span>
+
+    <span class="p">(</span><span class="s1">&#39;mapper&#39;</span><span class="p">,</span> <span class="n">mapper</span> <span class="p">)])</span>
+
+<span class="n">transformer2</span> <span class="o">=</span> <span class="n">ColumnTransformer</span><span class="p">(</span>
+    <span class="n">transformers</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">(</span><span class="s1">&#39;plynomial_transformer&#39;</span><span class="p">,</span> <span class="n">transformer1</span><span class="p">,</span> <span class="n">features_set_one</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;transformer2&#39;</span><span class="p">,</span> <span class="n">transformer2</span><span class="p">,</span> <span class="n">features_set_two</span><span class="p">)</span>
+    <span class="p">])</span>
+
+<span class="n">X_train</span><span class="o">=</span><span class="n">transformer2</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+<span class="n">X_train</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="err">(195, 38)</span>
+</pre></div>
+
+
+<p>The expanded number of columns are coming from polynomial feature transformation being applied to more features than before.
+ColumnTransformer objects (like transformer2 in our case) can also be used to create pipelines as can be seen below.</p>
+<div class="highlight"><pre><span></span><span class="n">pca</span><span class="o">=</span><span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">model</span><span class="o">=</span><span class="n">LassoCV</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">feature_pipe</span><span class="o">=</span><span class="n">make_pipeline</span><span class="p">(</span><span class="n">transformer2</span><span class="p">,</span><span class="n">pca</span><span class="p">)</span>
+<span class="n">X_train</span><span class="o">=</span><span class="n">feature_pipe</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+<span class="n">X_test</span><span class="o">=</span><span class="n">feature_pipe</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">y_pred</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; R^2 (test): {r2_score(y_test,y_pred)}&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; RMS: {mean_squared_error(y_test,y_pred)**0.5}&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="err"> R^2 (test): 0.34360014381555704</span>
+<span class="err"> RMS: 1.1732410711642152</span>
+</pre></div>
+
+
+<p>In this post we have used ColumnTransformer but similar operations can also be performed using <a href="https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.FeatureUnion.html#sklearn.pipeline.FeatureUnion" alt='FeatureUnion'>Feature Union</a></p>
+ </div>
+</div>
+ </div>
+</body>
+</html>
