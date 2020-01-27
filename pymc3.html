@@ -1,20 +1,63 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
- <title>Simulating the english premier league with pymc3</title>
- <!-- Latest compiled and minified CSS -->
- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
- <div class="container">
-  <h1><a href=".">dark_coffee</a></h1>
- </div>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  Simulating the english premier league with pymc3 | dark_coffee
+</title>
+  <link rel="canonical" href="./pymc3.html">
+
+
+  <link rel="stylesheet" href="./theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./theme/css/fontawesome.min.css">
+  <link rel="stylesheet" href="./theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="./theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/misc.atom.xml">  
+  <meta name="description" content="We will use pymc3 to simulate a season of the English Premier League. The models are based on the work of Baio and Blangiardo. We are using data from the 2018-2019 season gathered from Wikipedia. In addition to this, each team was given an unique numeric identifier such as 0 …">
+
+
 </head>
+
 <body>
- <div class="container">
+  <header class="header">
+    <div class="container">
 <div class="row">
- <div class="col-md-8">
-  <h3>Simulating the english premier league with pymc3</h3>
-  <label>2020-01-20</label>
-  <p>We will use pymc3 to simulate a season of the English Premier League. The models are based on the work of <a href="https://discovery.ucl.ac.uk/id/eprint/16040/1/16040.pdf"> Baio and Blangiardo.</a> We are using data from the 2018-2019 season gathered from <a href="https://en.wikipedia.org/wiki/2019%E2%80%9320_Premier_League#League_table">Wikipedia.</a> In addition to this, each team was given an unique numeric identifier such as 0 for Arsenal (ARS).</p>
+  <div class="col-sm-12">
+    <h1 class="title"><a href="./">dark_coffee</a></h1>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  Simulating the english premier league with pymc3
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2020-01-20T23:00:00-05:00">
+          <i class="fas fa-clock"></i>
+          Mon 20 January 2020
+        </li>
+        <li class="list-inline-item">
+          <i class="fas fa-folder-open"></i>
+          <a href="./category/misc.html">misc</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fas fa-user"></i>
+              <a href="./author/rittik-ghosh.html">Rittik Ghosh</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>We will use pymc3 to simulate a season of the English Premier League. The models are based on the work of <a href="https://discovery.ucl.ac.uk/id/eprint/16040/1/16040.pdf"> Baio and Blangiardo.</a> We are using data from the 2018-2019 season gathered from <a href="https://en.wikipedia.org/wiki/2019%E2%80%9320_Premier_League#League_table">Wikipedia.</a> In addition to this, each team was given an unique numeric identifier such as 0 for Arsenal (ARS).</p>
 <p>Goals scored are modelled as:</p>
 <p>$$ ygj∣θgj=Poisson(θgj) $$</p>
 <p>Where the parameters θ = (θg1, θg2) represent the scoring intensity in the g-th
@@ -1957,8 +2000,26 @@ season.</h4>
     }
   })({"config": {"view": {"continuousWidth": 400, "continuousHeight": 300}}, "data": {"name": "data-0a0c199d9382578ea13b304afec36b91"}, "mark": "bar", "encoding": {"x": {"type": "quantitative", "axis": {"title": "Probability of finishing in the top 5"}, "field": "prob"}, "y": {"type": "nominal", "axis": {"title": "Team"}, "field": "home_team"}}, "height": 900, "width": 700, "$schema": "https://vega.github.io/schema/vega-lite/v4.0.0.json", "datasets": {"data-0a0c199d9382578ea13b304afec36b91": [{"home_team": "MCI", "prob": 0.99255}, {"home_team": "LIV", "prob": 0.9896}, {"home_team": "TOT", "prob": 0.6521}, {"home_team": "CHE", "prob": 0.57975}, {"home_team": "ARS", "prob": 0.5293}, {"home_team": "MUN", "prob": 0.32415}, {"home_team": "EVE", "prob": 0.268}, {"home_team": "LEI", "prob": 0.1874}, {"home_team": "WOL", "prob": 0.161}, {"home_team": "CRY", "prob": 0.1384}, {"home_team": "WHU", "prob": 0.12905}, {"home_team": "WAT", "prob": 0.09665}, {"home_team": "NEW", "prob": 0.0828}, {"home_team": "BOU", "prob": 0.06035}, {"home_team": "SOU", "prob": 0.02565}, {"home_team": "BUR", "prob": 0.0219}, {"home_team": "BHA", "prob": 0.01075}, {"home_team": "CAR", "prob": 0.0036}, {"home_team": "FUL", "prob": 0.00095}, {"home_team": "HUD", "prob": 0.0002}]}}, {"mode": "vega-lite"});
 </script>
- </div>
-</div>
- </div>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="./authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="./archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="./categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+
 </body>
+
 </html>
