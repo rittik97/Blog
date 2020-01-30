@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  OpenCV thresholding meets historic works of art | dark_coffee
+</title>
+  <link rel="canonical" href="./opencv2thresholding.html">
+
+
+  <link rel="stylesheet" href="./theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./theme/css/fontawesome.min.css">
+  <link rel="stylesheet" href="./theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="./theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/misc.atom.xml">  
+  <meta name="description" content="OpenCV or Open source computer vision is a popular image processing library. Originally developed 20 years ago by Intel, it has found widespread adoption in computer vision applications and has over 18 million downloads. Here we explore the effects of OpenCV thresholding on historical artworks. Thresholding is exactly what it …">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="./">dark_coffee</a></h1>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  OpenCV thresholding meets historic works of art
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2019-12-22T14:52:00-05:00">
+          <i class="fas fa-clock"></i>
+          Sun 22 December 2019
+        </li>
+        <li class="list-inline-item">
+          <i class="fas fa-folder-open"></i>
+          <a href="./category/misc.html">misc</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fas fa-user"></i>
+              <a href="./author/rittik-ghosh.html">Rittik Ghosh</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>OpenCV or Open source computer vision is a popular image processing library. Originally developed 20 years ago by Intel, it has found widespread adoption in computer vision applications and has over 18 million downloads. Here we explore the effects of OpenCV thresholding on historical artworks. </p>
+<p>Thresholding is exactly what it sounds like, each pixel is compared to a threshold value, if it is less than the threshold, that pixel is set to 0, else it is set to a maximum value. Thresholding is typically applied to greyscale images but here we observe its effects on the original image as well. </p>
+<p>The code below explores simple thresholding on "Juan de Pareja" by Velázquez.</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span> <span class="k">as</span> <span class="nn">cv</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s1">&#39;images/opencv2/juan.jpg&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">set_figwidth</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">set_figheight</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">))</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span><span class="mi">256</span><span class="p">);</span>
+<span class="n">th1</span><span class="o">=</span><span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">th1</span><span class="p">,</span> <span class="n">cmap</span> <span class="o">=</span> <span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+
+<span class="c1">#Converting image to greyscale</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">))</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span><span class="mi">256</span><span class="p">);</span>
+<span class="n">th1</span><span class="o">=</span><span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">th1</span><span class="p">,</span> <span class="n">cmap</span> <span class="o">=</span> <span class="s1">&#39;gray&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<p><img alt="png" src="images/output_2_0.png"></p>
+<p>The Open CV library supports several kinds of thresholding, 
+here we display their effects on our image.</p>
+<div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">set_figwidth</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">set_figheight</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s1">&#39;images/opencv2/juan.jpg&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">ret</span><span class="p">,</span><span class="n">thresh1</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="mi">127</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="p">)</span>
+<span class="n">ret</span><span class="p">,</span><span class="n">thresh2</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="mi">127</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY_INV</span><span class="p">)</span>
+<span class="n">ret</span><span class="p">,</span><span class="n">thresh3</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="mi">127</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_TRUNC</span><span class="p">)</span>
+<span class="n">ret</span><span class="p">,</span><span class="n">thresh4</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="mi">127</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_TOZERO</span><span class="p">)</span>
+<span class="n">ret</span><span class="p">,</span><span class="n">thresh5</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="mi">127</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_TOZERO_INV</span><span class="p">)</span>
+<span class="n">th2</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">adaptiveThreshold</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">ADAPTIVE_THRESH_MEAN_C</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">th3</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">adaptiveThreshold</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">ADAPTIVE_THRESH_GAUSSIAN_C</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">th4</span> <span class="o">=</span>  <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="o">+</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_OTSU</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Original Image&#39;</span><span class="p">,</span><span class="s1">&#39;BINARY&#39;</span><span class="p">,</span><span class="s1">&#39;BINARY_INV&#39;</span><span class="p">,</span><span class="s1">&#39;TRUNC&#39;</span><span class="p">,</span><span class="s1">&#39;TOZERO&#39;</span><span class="p">,</span><span class="s1">&#39;TOZERO_INV&#39;</span><span class="p">,</span><span class="s1">&#39;Adaptive Mean Thresholding&#39;</span><span class="p">,</span> <span class="s1">&#39;Adaptive Gaussian Thresholding&#39;</span><span class="p">,</span><span class="s1">&#39;Otsu&#39;</span><span class="p">]</span>
+<span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">img</span><span class="p">,</span><span class="n">thresh1</span><span class="p">,</span> <span class="n">thresh2</span><span class="p">,</span> <span class="n">thresh3</span><span class="p">,</span> <span class="n">thresh4</span><span class="p">,</span> <span class="n">thresh5</span><span class="p">,</span><span class="n">th2</span><span class="p">,</span><span class="n">th3</span><span class="p">,</span> <span class="n">th4</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">titles</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([]),</span><span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([])</span>
+</pre></div>
+
+
+<p><img alt="png" src="images/output_4_0.png"></p>
+<p>Adaptive Thresholding acknowleges that there may not be a suitable global value, and instead uses points close to the pixel in question to determine the theshold value. As a result, different areas of the image have different threshold values. This can lead to better results in certain cases, such as when the image has varied lighting.</p>
+<p>Otsu Thresholding seeks to find an optimal thresholding value. It does so by identifying the values around in which pixels tend to conentrate (these would appear as peaks in the historgram). It finds the point that minimizes the variance between these "peaks" to give us the optimal thresholding value. </p>
+<p>Detaiils for all supported thresholding functions can be found at the bottom of this post.</p>
+<div class="highlight"><pre><span></span><span class="c1">### Setting processing values for each image </span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="n">cmaps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Oranges&#39;</span><span class="p">,</span><span class="s1">&#39;Spectral&#39;</span><span class="p">,</span> <span class="s1">&#39;bwr&#39;</span><span class="p">,</span><span class="s1">&#39;summer_r&#39;</span><span class="p">,</span><span class="s1">&#39;winter&#39;</span><span class="p">,</span><span class="s1">&#39;Blues&#39;</span><span class="p">,</span><span class="s1">&#39;viridis_r&#39;</span><span class="p">,</span><span class="s1">&#39;YlGnBu&#39;</span><span class="p">,</span><span class="s1">&#39;Purples&#39;</span><span class="p">]</span>
+
+<span class="n">names</span><span class="o">=</span><span class="p">[</span>
+
+    <span class="s1">&#39;images/opencv2/rem.jpg&#39;</span>
+    <span class="p">,</span><span class="s1">&#39;images/opencv2/vermeer.jpg&#39;</span>
+    <span class="p">,</span><span class="s1">&#39;images/opencv2/oldwoman.jpeg&#39;</span>
+    <span class="p">,</span><span class="s1">&#39;images/opencv2/mao.jpg&#39;</span>
+    <span class="p">,</span><span class="s1">&#39;images/opencv2/goya.jpg&#39;</span>
+    <span class="p">,</span><span class="s1">&#39;images/opencv2/medusa.jpeg&#39;</span>
+    <span class="p">,</span><span class="s1">&#39;images/opencv2/massacre.jpeg&#39;</span>
+    <span class="p">,</span><span class="s1">&#39;images/opencv2/satyr_drunk.jpg&#39;</span>
+    <span class="p">,</span><span class="s1">&#39;images/opencv2/salvator-mundi.jpg&#39;</span>
+<span class="p">]</span>
+<span class="n">filters</span><span class="o">=</span><span class="p">[</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_BINARY</span>
+    <span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_TOZERO</span>
+    <span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_TOZERO</span>
+    <span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_BINARY_INV</span>
+    <span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_TRUNC</span>
+    <span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_TOZERO</span> 
+    <span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="o">+</span><span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_OTSU</span>
+    <span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="o">+</span><span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_OTSU</span>
+    <span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="o">+</span><span class="n">cv2</span><span class="o">.</span><span class="n">THRESH_OTSU</span>
+<span class="p">]</span>
+
+<span class="n">threshold_values</span><span class="o">=</span><span class="p">[</span>
+    <span class="mi">25</span>
+    <span class="p">,</span><span class="mi">50</span>
+    <span class="p">,</span><span class="mi">50</span>
+    <span class="p">,</span><span class="mi">20</span>
+    <span class="p">,</span><span class="mi">200</span>
+    <span class="p">,</span><span class="mi">100</span>
+    <span class="p">,</span><span class="mi">100</span>
+    <span class="p">,</span><span class="mi">200</span>
+    <span class="p">,</span><span class="mi">60</span>
+<span class="p">]</span>
+
+<span class="n">data</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">cmaps</span><span class="p">,</span><span class="n">names</span><span class="p">,</span><span class="n">filters</span><span class="p">,</span><span class="n">threshold_values</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cmaps&#39;</span><span class="p">,</span> <span class="s1">&#39;images&#39;</span><span class="p">,</span><span class="s1">&#39;threshold_codes&#39;</span><span class="p">,</span><span class="s1">&#39;threshold&#39;</span><span class="p">])</span>
+<span class="n">data</span>
+</pre></div>
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>cmaps</th>
+      <th>images</th>
+      <th>threshold_codes</th>
+      <th>threshold</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Oranges</td>
+      <td>images/opencv2/rem.jpg</td>
+      <td>0</td>
+      <td>25</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Spectral</td>
+      <td>images/opencv2/vermeer.jpg</td>
+      <td>3</td>
+      <td>50</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>bwr</td>
+      <td>images/opencv2/oldwoman.jpeg</td>
+      <td>3</td>
+      <td>50</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>summer_r</td>
+      <td>images/opencv2/mao.jpg</td>
+      <td>1</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>winter</td>
+      <td>images/opencv2/goya.jpg</td>
+      <td>2</td>
+      <td>200</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>Blues</td>
+      <td>images/opencv2/medusa.jpeg</td>
+      <td>3</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>viridis_r</td>
+      <td>images/opencv2/massacre.jpeg</td>
+      <td>8</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>YlGnBu</td>
+      <td>images/opencv2/satyr_drunk.jpg</td>
+      <td>8</td>
+      <td>200</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>Purples</td>
+      <td>images/opencv2/salvator-mundi.jpg</td>
+      <td>8</td>
+      <td>60</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><span class="n">width</span> <span class="o">=</span> <span class="mi">450</span>
+<span class="n">height</span> <span class="o">=</span> <span class="mi">450</span>
+<span class="n">dim</span> <span class="o">=</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">wspace</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">set_figwidth</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">set_figheight</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">idx</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">interpolation</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_AREA</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">))</span>
+            <span class="k">continue</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">IMREAD_GRAYSCALE</span><span class="p">)</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;threshold&#39;</span><span class="p">][</span><span class="n">idx</span><span class="p">],</span><span class="mi">255</span><span class="p">,</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;threshold_codes&#39;</span><span class="p">][</span><span class="n">idx</span><span class="p">])</span>
+    <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">interpolation</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_AREA</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;cmaps&#39;</span><span class="p">][</span><span class="n">idx</span><span class="p">])</span>
+</pre></div>
+
+
+<p><img alt="png" src="images/output_8_0.png"></p>
+<h1>The ambitions & humanity of an unsettled child Inspired by Goya's potrait of Manuel Osorio (left unchanged).</h1>
+
+<p><br>
+<br>
+<br></p>
+<p>The original works, all of which I have been fortunate enough to personally see (by index position):
+<ul>
+<li>(0,0): "Self-Portrait" - Rembrandt, 1660.
+<li>(0,1): "Girl with a Pearl Earring" - Johannes Vermeer, 1665.
+<li>(0,2): "Head of an Old Woman" - Orazio Borgianni, circa 1610.
+<li>(1,0): "Mao" - Andy Warhol, 1972.
+<li>(1,1): "Manuel Osorio Manrique de Zuñiga" - Goya, 1787-88.
+<li>(1,2): "Medusa", Peter Paul Ruebens, circa 1618.
+<li>(2,0): "The Massacre of the Innocents" - Peter Paul Ruebens, 1611-12.
+<li>(2,1): "The Drunken Satyr" - Peter Paul Ruebens, circa 1620s.
+<li>(2,2): “Salvator Mundi” - Albrecht Durer, circa 1505.</p>
+</ul>
+
+<p><img src="images/thresholds.png"></p>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="./authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="./archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="./categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+
+</body>
+
+</html>
