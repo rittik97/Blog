@@ -6,7 +6,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  <title>  Dimensionality reduction with Neural Networks with a comparison to PCA | dark_coffee
+  <title>  Dimensionality reduction using an Autoencoder Neural Network with a comparison to PCA | dark_coffee
 </title>
   <link rel="canonical" href="./autoencoder.html">
 
@@ -37,7 +37,7 @@
 
   <div class="main">
     <div class="container">
-      <h1>  Dimensionality reduction with Neural Networks with a comparison to PCA
+      <h1>  Dimensionality reduction using an Autoencoder Neural Network with a comparison to PCA
 </h1>
       <hr>
   <article class="article">
@@ -257,10 +257,10 @@ While t-SNE can learn non-linear relationships, it requires fairly low-dimension
 
 
 <p><img alt="png" src="images/auto_output_14_0.png"></p>
-<h4>The outputs of the autoencoder network (row 2) closely resemble that of the original data (row 1). As can be seen, PCA (row 3) with 2 components has lost a significant amount of information. </h4>
+<h4>The outputs of the autoencoder network (row 2) closely resemble that of the original data (row 1). PCA (row 3) with 2 components has lost a significant amount of information. </h4>
 
 <p>We can improve the performance of our neural network by adding more layers and longer training.</p>
-<p>On MNIST data, our autoencoder had an MSE loss of 0.0341 with the same topology and training steps. With PCA we achieved 0.056. Here were the outputs,</p>
+<p>On MNIST data, our autoencoder had an MSE loss of 0.0341 with the same topology and training steps. With PCA we achieved 0.056. Here are the equivalent outputs on the MNIST dataset:</p>
 <p><img src="images/MNIST1.png"></p>
 <p><img src="images/MNIST2.png"></p>
     </div>
