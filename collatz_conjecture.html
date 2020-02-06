@@ -1,63 +1,82 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <!-- Required meta tags -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="" />
 
-  <title>  Visualizing the Collatz Conjecture using Altair & Matplotlib | dark_coffee
-</title>
-  <link rel="canonical" href="./collatz_conjecture.html">
+  <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro|Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="./theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="./theme/pygments/github.min.css">
+  <link rel="stylesheet" type="text/css" href="./theme/font-awesome/css/fontawesome.css">
+  <link rel="stylesheet" type="text/css" href="./theme/font-awesome/css/brands.css">
+  <link rel="stylesheet" type="text/css" href="./theme/font-awesome/css/solid.css">
 
 
-  <link rel="stylesheet" href="./theme/css/bootstrap.min.css">
-  <link rel="stylesheet" href="./theme/css/fontawesome.min.css">
-  <link rel="stylesheet" href="./theme/css/pygments/default.min.css">
-  <link rel="stylesheet" href="./theme/css/theme.css">
+    <link href="https://rittik97.github.io/Blog/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="dark_coffee Atom">
 
-  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
-        href="https://rittik97.github.io/Blog/feeds/all.atom.xml">
-  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
-        href="https://rittik97.github.io/Blog/feeds/misc.atom.xml">  
-  <meta name="description" content="Introduced by Lothar Collatz in 1937, the conjecture can be defined as: start with any positive integer, if it is even divide it by two. If it is odd, triple it and add one. Now repeat this procedure to generate a sequence. The great unsolved question in mathematics is to …">
 
+
+
+
+<meta name="author" content="Rittik Ghosh" />
+<meta name="description" content="Introduced by Lothar Collatz in 1937, the conjecture can be defined as: start with any positive integer, if it is even divide it by two. If it is odd, triple it and add one. Now repeat this procedure to generate a sequence. The great unsolved question in mathematics is to …" />
+<meta name="keywords" content="">
+
+
+<meta property="og:site_name" content="dark_coffee"/>
+<meta property="og:title" content="Visualizing the Collatz Conjecture using Altair &amp; Matplotlib"/>
+<meta property="og:description" content="Introduced by Lothar Collatz in 1937, the conjecture can be defined as: start with any positive integer, if it is even divide it by two. If it is odd, triple it and add one. Now repeat this procedure to generate a sequence. The great unsolved question in mathematics is to …"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="./collatz_conjecture.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2019-12-27 11:35:00-05:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="./author/rittik-ghosh.html">
+<meta property="article:section" content="misc"/>
+<meta property="og:image" content="">
+
+  <title>dark_coffee &ndash; Visualizing the Collatz Conjecture using Altair &amp; Matplotlib</title>
 
 </head>
-
 <body>
-  <header class="header">
-    <div class="container">
-<div class="row">
-  <div class="col-sm-12">
-    <h1 class="title"><a href="./">dark_coffee</a></h1>
-  </div>
-</div>    </div>
+  <aside>
+    <div>
+      <a href=".">
+        <img src="./theme/img/profile.png" alt="" title="">
+      </a>
+      <h1><a href="."></a></h1>
+
+
+
+      <ul class="social">
+      </ul>
+    </div>
+
+
+  </aside>
+  <main>
+
+
+<article class="single">
+  <header>
+      
+    <h1 id="collatz_conjecture">Visualizing the Collatz Conjecture using Altair & Matplotlib</h1>
+    <p>
+          Posted on Fri 27 December 2019 in <a href="./category/misc.html">misc</a>
+
+
+    </p>
   </header>
 
-  <div class="main">
-    <div class="container">
-      <h1>  Visualizing the Collatz Conjecture using Altair & Matplotlib
-</h1>
-      <hr>
-  <article class="article">
-    <header>
-      <ul class="list-inline">
-        <li class="list-inline-item text-muted" title="2019-12-27T11:35:00-05:00">
-          <i class="fas fa-clock"></i>
-          Fri 27 December 2019
-        </li>
-        <li class="list-inline-item">
-          <i class="fas fa-folder-open"></i>
-          <a href="./category/misc.html">misc</a>
-        </li>
-          <li class="list-inline-item">
-            <i class="fas fa-user"></i>
-              <a href="./author/rittik-ghosh.html">Rittik Ghosh</a>          </li>
-      </ul>
-    </header>
-    <div class="content">
-      <p>Introduced by Lothar Collatz in 1937, the conjecture can be defined as:
+
+  <div>
+    <p>Introduced by Lothar Collatz in 1937, the conjecture can be defined as:
 start with any positive integer, if it is even divide it by two. If it is odd, triple it and add one. Now repeat this procedure to generate a sequence.</p>
 <p>The great unsolved question in mathematics is to prove that this sequence will reach 1 for all positive integer initial values. The problem is widely believed to be out of reach of present day mathematics. The great martian Paul Erdos said of the conjecture, "Mathematics may not be ready for such problems."</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">altair</span> <span class="k">as</span> <span class="nn">alt</span>
@@ -262,26 +281,37 @@ The traditional fractal pattern colors points that escape to infinity with light
 <h4> XKCD on the Collatz Conjecture: </h4>
 
 <p><img src='images/collatz_conjecture_xkcd.png'></p>
-    </div>
-  </article>
-    </div>
+  </div>
+  <div class="tag-cloud">
+    <p>
+    </p>
   </div>
 
-  <footer class="footer">
-    <div class="container">
-<div class="row">
-  <ul class="col-sm-6 list-inline">
-      <li class="list-inline-item"><a href="./authors.html">Authors</a></li>
-    <li class="list-inline-item"><a href="./archives.html">Archives</a></li>
-    <li class="list-inline-item"><a href="./categories.html">Categories</a></li>
-  </ul>
-  <p class="col-sm-6 text-sm-right text-muted">
-    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
-    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
-  </p>
-</div>    </div>
-  </footer>
+
+
+
+
+</article>
+
+    <footer>
+<p>&copy;  </p>
+<p>    Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
+</p>    </footer>
+  </main>
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " dark_coffee ",
+  "url" : ".",
+  "image": "",
+  "description": ""
+}
+</script>
 
 </body>
-
 </html>
