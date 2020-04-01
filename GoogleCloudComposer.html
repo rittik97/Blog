@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-W7NZXFV');</script>
+  <!-- End Google Tag Manager -->
+
+  <title>  Depolying Airflow DAGs using Google Cloud Composer | dark_coffee
+</title>
+  <link rel="canonical" href="./GoogleCloudComposer.html">
+
+
+  <link rel="stylesheet" href="./theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./theme/css/fontawesome.min.css">
+  <link rel="stylesheet" href="./theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="./theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/data-science.atom.xml">  
+  <meta name="description" content=""Airflow is a platform to programmatically author, schedule and monitor workflows. Use Airflow to author workflows as Directed Acyclic Graphs (DAGs) of tasks. The Airflow scheduler executes your tasks on an array of workers while following the specified dependencies. Rich command line utilities make performing complex surgeries on DAGs a …">
+
+
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W7NZXFV"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="./">dark_coffee</a></h1>
+  </div>
+</div>    </div>
+  </header>
+  <div class="main">
+    <div class="container">
+    <div class="row">
+      <ul class="col-sm-6 list-inline">
+        <li class="list-inline-item"><a href="https://github.com/rittik97">Github</a></li>
+        <li class="list-inline-item"><a href="https://www.linkedin.com/in/rittikghosh/">LinkedIn</a></li>
+        <li class="list-inline-item"><a href="./categories.html">Categories</a></li>
+      </ul>
+      <hr />
+    </div>
+  </div>
+  </div>
+  <div class="main">
+
+    <div class="container">
+      <h1>  Depolying Airflow DAGs using Google Cloud Composer
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2020-03-02T11:38:00-05:00">
+          <i class="fas fa-clock"></i>
+          Mon 02 March 2020
+        </li>
+        <li class="list-inline-item">
+          <i class="fas fa-folder-open"></i>
+          <a href="./category/data-science.html">Data Science</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fas fa-user"></i>
+              <a href="./author/rittik-ghosh.html">Rittik Ghosh</a>          </li>
+          <li class="list-inline-item">
+            <i class="fas fa-tag"></i>
+              <a href="./tag/airflow.html">#Airflow</a>,               <a href="./tag/pipelines.html">#Pipelines</a>,               <a href="./tag/gcp.html">#GCP</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>"Airflow is a platform to programmatically author, schedule and monitor workflows.</p>
+<p>Use Airflow to author workflows as Directed Acyclic Graphs (DAGs) of tasks. The Airflow scheduler executes your tasks on an array of workers while following the specified dependencies. Rich command line utilities make performing complex surgeries on DAGs a snap. The rich user interface makes it easy to visualize pipelines running in production, monitor progress, and troubleshoot issues when needed."</p>
+<p>-<a href="https://airflow.apache.org/">Official Airflow website</a></p>
+<p>Airflow is a powerful tool that lets you schedule and automate the execution of tasks and scripts. Execution sequencing is specified conveniently using directed acyclic graphs (DAG). Airflow also comes with a rich web-UI interface that helps monitor and control tasks and pipelines as can be seen below:</p>
+<p><img src="images/airflow.gif" style="width:400px;"> </p>
+<p>Airflow works well with <a href="https://cloud.google.com/"> Google cloud platform (GCP) </a>. For example, along with several "operators" that work well with popular databases, Airflow also natively supports a BigQueryOperator to interface with data warehouses on GCP. There are several tutorials &amp; blogs available online including in the <a href="https://airflow.apache.org/docs/stable/tutorial.html">offical documentation.</a> The purpose of this post is to demonstrate how to deploy airflow on Google Cloud Composer (which is the quickest and simplest way for Airflow deployments)</p>
+<p>Apart from speed and ease, using Composer frees data scientists from server related DevOps tasks. GCP also provides robust scaling and monitoring facilities.</p>
+<p>As is typical for GCP, we first have to create a project. I have called it airflow-test. After project creation scroll down to composer under the BIG DATA heading. </p>
+<p><img src="images/composer_create2.png" style="width:400px;"> 
+</hr>
+<img src="images/composer_create1.png" style="width:400px;"></p>
+<p>GCP provides a convenient configuration panel where we can pick our python and airflow versions. We can also pick the number of nodes and their location. Additionally, there are facilities to install dependent python packages. This exemplifies the unparalleled ease with which airflow can be deployed using GCP Composer.</p>
+<p>After hitting create, GCP builds our environment and this can take a few minutes (12 minutes in my case).</p>
+<p><img src="images/composer_create3.png" style="width:400px;"></p>
+<p>Clicking into the created environment gives us links to the Airflow web UI and to the DAGs folder. </p>
+<p><img src="images/composer_create4.png" style="width:400px;"> </p>
+</hr>
+
+<p>The DAGs folder is a Google Cloud Bucket that lets us easily upload the DAGs we need to run. </p>
+<p><img src="images/composer_create5.png" style="width:400px;"></p>
+<p>I have uploaded a simple DAG, "first_dag", it is scheduled to run every 3 minutes and uses a BashOperator &amp; a PythonOperator. Uploading it to the cloud bucket is all that is required for it to be up and running.</p>
+<p><img src="images/composer_create6.png" style="width:400px;"> 
+</hr>
+<img src="images/composer_create7.png" style="width:400px;"></p>
+<p>There we have it, our DAG is up &amp; running in minutes.</p>
+    </div>
+  </article>
+
+
+
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="./authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="./archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="./categories.html">Categories</a></li>
+      <li class="list-inline-item"><a href="./tags.html">Tags</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+
+</body>
+
+</html>
