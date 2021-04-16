@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-W7NZXFV');</script>
+  <!-- End Google Tag Manager -->
+
+  <title>  Dimensionality reduction using an Autoencoder Neural Network with a comparison to PCA | dark_coffee
+</title>
+  <link rel="canonical" href="./autoencoder.html">
+
+
+  <link rel="stylesheet" href="./theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./theme/css/fontawesome.min.css">
+  <link rel="stylesheet" href="./theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="./theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/data-science.atom.xml">  
+  <meta name="description" content="Autoencoders are a type of artificial neural network that can be used to compress and decompress data. Being a neural network, it has the ability to learn automatically and can be used on any kind of input data. As opposed to say JPEG which can only be used on images …">
+
+
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W7NZXFV"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="./">dark_coffee</a></h1>
+  </div>
+</div>    </div>
+  </header>
+  <div class="main">
+    <div class="container">
+    <div class="row">
+      <ul class="col-sm-6 list-inline">
+        <li class="list-inline-item"><a href="https://github.com/rittik97">Github</a></li>
+        <li class="list-inline-item"><a href="https://www.linkedin.com/in/rittikghosh/">LinkedIn</a></li>
+        <li class="list-inline-item"><a href="./categories.html">Categories</a></li>
+      </ul>
+      <hr />
+    </div>
+  </div>
+  </div>
+  <div class="main">
+
+    <div class="container">
+      <h1>  Dimensionality reduction using an Autoencoder Neural Network with a comparison to PCA
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2020-02-02T16:55:00-05:00">
+          <i class="fas fa-clock"></i>
+          Sun 02 February 2020
+        </li>
+        <li class="list-inline-item">
+          <i class="fas fa-folder-open"></i>
+          <a href="./category/data-science.html">Data Science</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fas fa-user"></i>
+              <a href="./author/rittik-ghosh.html">Rittik Ghosh</a>          </li>
+          <li class="list-inline-item">
+            <i class="fas fa-tag"></i>
+              <a href="./tag/dimensionality-reduction.html">#Dimensionality Reduction</a>,               <a href="./tag/neural-network.html">#Neural Network</a>,               <a href="./tag/data-visualization.html">#Data Visualization</a>,               <a href="./tag/feature-engineering.html">#Feature Engineering</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>Autoencoders are a type of artificial neural network that can be used to compress and decompress data. Being a neural network, it has the ability to learn automatically and can be used on any kind of input data. As opposed to say JPEG which can only be used on images. However, just like JPEG, it is a lossy compression technique. </p>
+<p>Network Topology:</p>
+<p><img src="images/topology.png"></img></p>
+<p>As you would expect, the number of hidden layers can be increased to form a deep autoencoder. <br>
+Uses of Autoencoders include:
+<ul>
+    <li> Dimensionality Reduction</li>
+    <li> Outlier Detection</li>
+    <li> Denoising Data</li></p>
+<p></ul>    </p>
+<p>We will explore dimensionality reduction on FASHION-MNIST data and compare it to principal component analysis (PCA) as proposed by Hinton and Salakhutdinov in <a href="https://www.cs.toronto.edu/~hinton/science.pdf"> Reducing the Dimensionality of Data with Neural Networks, Science 2006.</a>
+Note in the paper, they use MNIST, comparable outputs with that dataset can be found at the bottom of this page.</p>
+<p>PCA projects data to a new orthogonal coordinate space along "principal components". These components are linearly uncorrelated and the first component describes the highest variance (of the original data) among the new axes. PCA was invented in 1901 by Karl Pearson of the Person correlation coefficient fame. He is also credited with establishing the discipline of mathematical statistics and with establishing the world's first statistics department at UCL in 1911.</p>
+<p>While PCA is a very powerful tool it assumes that the components are linear combinations of the original features and that these components are orthogonal to each other. This can prevent PCA from learning all the relationships that may exist between input features. A more powerful approach is to use <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE.</a> 
+While t-SNE can learn non-linear relationships, it requires fairly low-dimensional data. Autoencoder networks are able to learn non-linear relationships in high dimensional data and while they can be used on a stand-alone basis, they are often used to compress data before feeding it to t-SNE.</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span><span class="p">;</span> <span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">tensorflow</span> <span class="kn">import</span> <span class="n">keras</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="n">Sequential</span><span class="p">,</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Input</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.datasets</span> <span class="kn">import</span> <span class="n">mnist</span><span class="p">,</span> <span class="n">fashion_mnist</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">MinMaxScaler</span>
+<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">=</span> <span class="n">fashion_mnist</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
+<span class="n">x_train</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="err">(60000, 28, 28)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">x_train</span> <span class="o">=</span> <span class="n">x_train</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">28</span><span class="o">*</span><span class="mi">28</span><span class="p">)</span>
+<span class="n">x_test</span> <span class="o">=</span> <span class="n">x_test</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">28</span><span class="o">*</span><span class="mi">28</span><span class="p">)</span>
+<span class="n">scaler</span><span class="o">=</span><span class="n">MinMaxScaler</span><span class="p">()</span>
+<span class="n">x_train</span><span class="o">=</span><span class="n">scaler</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span>
+<span class="n">x_test</span><span class="o">=</span><span class="n">scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+<span class="n">m</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span>  <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">784</span><span class="p">,)))</span>
+<span class="n">m</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span>  <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
+<span class="n">m</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">250</span><span class="p">,</span>  <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
+<span class="n">m</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span>  <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
+<span class="n">m</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span>    <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;bottleneck&quot;</span><span class="p">))</span>
+<span class="n">m</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span>  <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
+<span class="n">m</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">250</span><span class="p">,</span>  <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
+<span class="n">m</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span>  <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
+<span class="n">m</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span>  <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
+<span class="n">m</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">784</span><span class="p">,</span>  <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">))</span>
+
+<span class="n">m</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span><span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;adam&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">history</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">validation_data</span><span class="o">=</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">x_test</span><span class="p">))</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="err">Train on 60000 samples, validate on 10000 samples</span>
+<span class="err">Epoch 1/25</span>
+<span class="err">60000/60000 [==============================] - 15s 253us/sample - loss: 0.0411 - val_loss: 0.0303</span>
+<span class="err">Epoch 2/25</span>
+<span class="err">60000/60000 [==============================] - 15s 254us/sample - loss: 0.0290 - val_loss: 0.0277</span>
+<span class="err">Epoch 3/25</span>
+<span class="err">60000/60000 [==============================] - 14s 236us/sample - loss: 0.0284 - val_loss: 0.0276</span>
+<span class="err">Epoch 4/25</span>
+<span class="err">60000/60000 [==============================] - 13s 210us/sample - loss: 0.0271 - val_loss: 0.0263</span>
+<span class="err">Epoch 5/25</span>
+<span class="err">60000/60000 [==============================] - 13s 220us/sample - loss: 0.0269 - val_loss: 0.0260</span>
+<span class="err">Epoch 6/25</span>
+<span class="err">60000/60000 [==============================] - 14s 238us/sample - loss: 0.0267 - val_loss: 0.0263</span>
+<span class="err">Epoch 7/25</span>
+<span class="err">60000/60000 [==============================] - 14s 235us/sample - loss: 0.0263 - val_loss: 0.0259</span>
+<span class="err">Epoch 8/25</span>
+<span class="err">60000/60000 [==============================] - 14s 234us/sample - loss: 0.0263 - val_loss: 0.0254</span>
+<span class="err">Epoch 9/25</span>
+<span class="err">60000/60000 [==============================] - 14s 235us/sample - loss: 0.0255 - val_loss: 0.0252</span>
+<span class="err">Epoch 10/25</span>
+<span class="err">60000/60000 [==============================] - 14s 241us/sample - loss: 0.0253 - val_loss: 0.0250</span>
+<span class="err">Epoch 11/25</span>
+<span class="err">60000/60000 [==============================] - 14s 232us/sample - loss: 0.0250 - val_loss: 0.0248</span>
+<span class="err">Epoch 12/25</span>
+<span class="err">60000/60000 [==============================] - 15s 247us/sample - loss: 0.0252 - val_loss: 0.0247</span>
+<span class="err">Epoch 13/25</span>
+<span class="err">60000/60000 [==============================] - 15s 244us/sample - loss: 0.0248 - val_loss: 0.0265</span>
+<span class="err">Epoch 14/25</span>
+<span class="err">60000/60000 [==============================] - 14s 237us/sample - loss: 0.0258 - val_loss: 0.0261</span>
+<span class="err">Epoch 15/25</span>
+<span class="err">60000/60000 [==============================] - 14s 241us/sample - loss: 0.0252 - val_loss: 0.0258</span>
+<span class="err">Epoch 16/25</span>
+<span class="err">60000/60000 [==============================] - 14s 239us/sample - loss: 0.0262 - val_loss: 0.0282</span>
+<span class="err">Epoch 17/25</span>
+<span class="err">60000/60000 [==============================] - 14s 237us/sample - loss: 0.0265 - val_loss: 0.0258</span>
+<span class="err">Epoch 18/25</span>
+<span class="err">60000/60000 [==============================] - 14s 236us/sample - loss: 0.0265 - val_loss: 0.0278</span>
+<span class="err">Epoch 19/25</span>
+<span class="err">60000/60000 [==============================] - 14s 234us/sample - loss: 0.0260 - val_loss: 0.0261</span>
+<span class="err">Epoch 20/25</span>
+<span class="err">60000/60000 [==============================] - 14s 240us/sample - loss: 0.0261 - val_loss: 0.0258</span>
+<span class="err">Epoch 21/25</span>
+<span class="err">60000/60000 [==============================] - 14s 238us/sample - loss: 0.0255 - val_loss: 0.0255</span>
+<span class="err">Epoch 22/25</span>
+<span class="err">60000/60000 [==============================] - 14s 238us/sample - loss: 0.0270 - val_loss: 0.0270</span>
+<span class="err">Epoch 23/25</span>
+<span class="err">60000/60000 [==============================] - 14s 241us/sample - loss: 0.0264 - val_loss: 0.0255</span>
+<span class="err">Epoch 24/25</span>
+<span class="err">60000/60000 [==============================] - 15s 244us/sample - loss: 0.0259 - val_loss: 0.0253</span>
+<span class="err">Epoch 25/25</span>
+<span class="err">60000/60000 [==============================] - 15s 249us/sample - loss: 0.0259 - val_loss: 0.0259</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">encoder</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s1">&#39;bottleneck&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+<span class="n">encoded</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span>
+<span class="n">decoded</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span>    
+<span class="n">encoder</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="c">Model: &quot;model&quot;</span>
+<span class="err">_________________________________________________________________</span>
+<span class="err">Layer (type)                 Output Shape              Param #   </span>
+<span class="err">=================================================================</span>
+<span class="err">dense_input (InputLayer)     [(None, 784)]             0         </span>
+<span class="err">_________________________________________________________________</span>
+<span class="err">dense (Dense)                (None, 1000)              785000    </span>
+<span class="err">_________________________________________________________________</span>
+<span class="err">dense_1 (Dense)              (None, 500)               500500    </span>
+<span class="err">_________________________________________________________________</span>
+<span class="err">dense_2 (Dense)              (None, 250)               125250    </span>
+<span class="err">_________________________________________________________________</span>
+<span class="err">dense_3 (Dense)              (None, 32)                8032      </span>
+<span class="err">_________________________________________________________________</span>
+<span class="err">bottleneck (Dense)           (None, 2)                 66        </span>
+<span class="err">=================================================================</span>
+<span class="err">Total params: 1,418,848</span>
+<span class="err">Trainable params: 1,418,848</span>
+<span class="err">Non-trainable params: 0</span>
+<span class="err">_________________________________________________________________</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">pca</span><span class="o">=</span><span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">x_train_pca</span><span class="o">=</span><span class="n">pca</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span>
+<span class="n">x_pca_inv</span><span class="o">=</span><span class="n">pca</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">x_train_pca</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">loss</span><span class="o">=</span><span class="p">((</span><span class="n">x_train</span> <span class="o">-</span> <span class="n">x_pca_inv</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reconstruction loss from PCA:&quot;</span><span class="p">,</span><span class="n">loss</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="err">Reconstruction loss from PCA: 0.0463176200250383</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Val set loss&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Train set loss&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">xmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;PCA loss&#39;</span><span class="p">,</span> <span class="n">linestyles</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.3</span><span class="p">,</span> <span class="mi">1</span><span class="p">));</span>
+</pre></div>
+
+
+<p><img alt="png" src="images/auto_output_11_0.png"></p>
+<p>Our Neural Network was able to bring the loss down to 0.026 when compared with 0.046 for PCA. It was able to preserve more information after decompression or "re-projection". Changing all of the activation functions to linear would result in our network converging to the same loss as PCA. This would make our autoencoder network equivalent to PCA.</p>
+<div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">encoded</span><span class="p">[:</span><span class="mi">9000</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">encoded</span><span class="p">[:</span><span class="mi">9000</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">y_train</span><span class="p">[:</span><span class="mi">9000</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Autoencoder&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_train_pca</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">][:</span><span class="mi">9000</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">x_train_pca</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">][:</span><span class="mi">9000</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">y_train</span><span class="p">[:</span><span class="mi">9000</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;PCA&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<p><img alt="png" src="images/auto_output_13_0.png"></p>
+<div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">set_figwidth</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">set_figheight</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plot_this</span><span class="o">=</span><span class="p">[</span><span class="n">x_train</span><span class="p">,</span> <span class="n">decoded</span><span class="p">,</span> <span class="n">x_pca_inv</span><span class="p">]</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Original vs Autoencoder vs PCA&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">plot_this</span><span class="p">)):</span> 
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">j</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">plot_this</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span><span class="mi">28</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greys&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p><img alt="png" src="images/auto_output_14_0.png"></p>
+<h4>The outputs of the autoencoder network (row 2) closely resemble that of the original data (row 1). PCA (row 3) with 2 components has lost a significant amount of information. </h4>
+
+<p>We can improve the performance of our neural network by adding more layers and longer training.</p>
+<p>On MNIST data, our autoencoder had an MSE loss of 0.0341 with the same topology and training steps. With PCA we achieved 0.056. Here are the equivalent outputs on the MNIST dataset:</p>
+<p><img src="images/MNIST1.png"></p>
+<p><img src="images/MNIST2.png"></p>
+    </div>
+  </article>
+
+
+
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="./authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="./archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="./categories.html">Categories</a></li>
+      <li class="list-inline-item"><a href="./tags.html">Tags</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+
+</body>
+
+</html>

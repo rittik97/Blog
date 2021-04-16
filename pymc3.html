@@ -1,0 +1,2055 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-W7NZXFV');</script>
+  <!-- End Google Tag Manager -->
+
+  <title>  Simulating the english premier league with pymc3 | dark_coffee
+</title>
+  <link rel="canonical" href="./pymc3.html">
+
+
+  <link rel="stylesheet" href="./theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./theme/css/fontawesome.min.css">
+  <link rel="stylesheet" href="./theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="./theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/sports.atom.xml">  
+  <meta name="description" content="We will use pymc3 to simulate a season of the English Premier League. The models are based on the work of Baio and Blangiardo. We are using data from the 2018-2019 season gathered from Wikipedia. In addition to this, each team was given an unique numeric identifier such as 0 …">
+
+
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W7NZXFV"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="./">dark_coffee</a></h1>
+  </div>
+</div>    </div>
+  </header>
+  <div class="main">
+    <div class="container">
+    <div class="row">
+      <ul class="col-sm-6 list-inline">
+        <li class="list-inline-item"><a href="https://github.com/rittik97">Github</a></li>
+        <li class="list-inline-item"><a href="https://www.linkedin.com/in/rittikghosh/">LinkedIn</a></li>
+        <li class="list-inline-item"><a href="./categories.html">Categories</a></li>
+      </ul>
+      <hr />
+    </div>
+  </div>
+  </div>
+  <div class="main">
+
+    <div class="container">
+      <h1>  Simulating the english premier league with pymc3
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2020-01-20T23:00:00-05:00">
+          <i class="fas fa-clock"></i>
+          Mon 20 January 2020
+        </li>
+        <li class="list-inline-item">
+          <i class="fas fa-folder-open"></i>
+          <a href="./category/sports.html">Sports</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fas fa-user"></i>
+              <a href="./author/rittik-ghosh.html">Rittik Ghosh</a>          </li>
+          <li class="list-inline-item">
+            <i class="fas fa-tag"></i>
+              <a href="./tag/monte-carlo-simulation.html">#Monte Carlo Simulation</a>,               <a href="./tag/bayesian-statistics.html">#Bayesian Statistics</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>We will use pymc3 to simulate a season of the English Premier League. The models are based on the work of <a href="https://discovery.ucl.ac.uk/id/eprint/16040/1/16040.pdf"> Baio and Blangiardo.</a> We are using data from the 2018-2019 season gathered from <a href="https://en.wikipedia.org/wiki/2019%E2%80%9320_Premier_League#League_table">Wikipedia.</a> In addition to this, each team was given an unique numeric identifier such as 0 for Arsenal (ARS).</p>
+<p>Goals scored are modelled as:</p>
+<p>$$ ygj∣θgj=Poisson(θgj) $$</p>
+<p>Where the parameters θ = (θg1, θg2) represent the scoring intensity in the g-th
+game for the team playing at home (j = 1) and away (j = 2), respectively.</p>
+<p>Thetas themselves are modelled using a log-linear model:</p>
+<p>$$
+log θg1 = home + atth(g) + defa(g)
+$$
+$$
+log θg2 = atta(g) + defh(g)
+$$</p>
+<p>Scoring intensity is determined jointly by the attack
+and defense ability of the two teams involved, represented by the parameters
+att and def. </p>
+<p>$$ attt ∼ Normal(µatt, τatt)$$, $$deft ∼ Normal(µdef , τdef ).$$</p>
+<p>$$
+µatt ∼ Normal(0, 0.0001), µdef ∼ Normal(0, 0.0001),
+τatt ∼ Gamma(0.1, 0.1), τdef ∼ Gamma(0.1, 0.1).
+$$</p>
+<p>The home parameter represents the advantage for the team hosting the game
+and it is assumed that this effect is constant for all teams throughout the
+season. </p>
+<p>$$ home ∼ Normal(0, 0.0001). $$</p>
+<p><img src="images/model.png"></p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="k">as</span> <span class="nn">tt</span>
+<span class="kn">import</span> <span class="nn">pymc3</span> <span class="k">as</span> <span class="nn">pm</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">altair</span> <span class="k">as</span> <span class="nn">alt</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data/epl.csv&#39;</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Unnamed: 0</th>
+      <th>home</th>
+      <th>away</th>
+      <th>home_score</th>
+      <th>away_score</th>
+      <th>i_home</th>
+      <th>i_away</th>
+      <th>GD</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>ARS</td>
+      <td>BOU</td>
+      <td>5</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>ARS</td>
+      <td>BHA</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2</td>
+      <td>ARS</td>
+      <td>BUR</td>
+      <td>3</td>
+      <td>1</td>
+      <td>0</td>
+      <td>3</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>ARS</td>
+      <td>CAR</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4</td>
+      <td>ARS</td>
+      <td>CHE</td>
+      <td>2</td>
+      <td>0</td>
+      <td>0</td>
+      <td>5</td>
+      <td>2</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><span class="n">observed_home_goals</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">home_score</span><span class="o">.</span><span class="n">values</span>
+<span class="n">observed_away_goals</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">away_score</span><span class="o">.</span><span class="n">values</span>
+<span class="n">home_team</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">i_home</span><span class="o">.</span><span class="n">values</span>
+<span class="n">away_team</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">i_away</span><span class="o">.</span><span class="n">values</span>
+<span class="n">num_teams</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">i_home</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+<span class="n">num_games</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">home_team</span><span class="p">)</span>
+<span class="n">att_starting_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;away&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">away_score</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+<span class="n">def_starting_points</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;home&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">away_score</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">pm</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span> <span class="k">as</span> <span class="n">model</span><span class="p">:</span>    
+    <span class="n">home</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Normal</span><span class="p">(</span><span class="s1">&#39;home&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">.</span><span class="mi">0001</span><span class="p">)</span>
+    <span class="n">sd_att</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Gamma</span><span class="p">(</span><span class="s1">&#39;tau_att&#39;</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">,)</span>
+    <span class="n">sd_def</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Gamma</span><span class="p">(</span><span class="s1">&#39;tau_def&#39;</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">,)</span>
+    <span class="n">intercept</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Normal</span><span class="p">(</span><span class="s1">&#39;intercept&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">.</span><span class="mi">0001</span><span class="p">)</span>
+    <span class="n">atts_star</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Normal</span><span class="p">(</span><span class="s2">&quot;atts_star&quot;</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sd_att</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">num_teams</span><span class="p">)</span>
+    <span class="n">defs_star</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Normal</span><span class="p">(</span><span class="s2">&quot;defs_star&quot;</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sd_def</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">num_teams</span><span class="p">)</span>
+
+    <span class="c1"># We are subtracting the mean to enforce a sum to zero constraint as recommended by the authors.</span>
+    <span class="n">atts</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s1">&#39;atts&#39;</span><span class="p">,</span> <span class="n">atts_star</span> <span class="o">-</span> <span class="n">tt</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">atts_star</span><span class="p">))</span>
+    <span class="n">defs</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s1">&#39;defs&#39;</span><span class="p">,</span> <span class="n">defs_star</span> <span class="o">-</span> <span class="n">tt</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">defs_star</span><span class="p">))</span>
+
+    <span class="n">home_theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">intercept</span> <span class="o">+</span> <span class="n">home</span> <span class="o">+</span> <span class="n">atts</span><span class="p">[</span><span class="n">home_team</span><span class="p">]</span> <span class="o">+</span> <span class="n">defs</span><span class="p">[</span><span class="n">away_team</span><span class="p">])</span>
+    <span class="n">away_theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">intercept</span> <span class="o">+</span> <span class="n">atts</span><span class="p">[</span><span class="n">away_team</span><span class="p">]</span> <span class="o">+</span> <span class="n">defs</span><span class="p">[</span><span class="n">home_team</span><span class="p">])</span>                
+
+    <span class="n">home_goals</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Poisson</span><span class="p">(</span><span class="s1">&#39;home_goals&#39;</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">home_theta</span><span class="p">,</span> <span class="n">observed</span><span class="o">=</span><span class="n">observed_home_goals</span><span class="p">)</span>
+    <span class="n">away_goals</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Poisson</span><span class="p">(</span><span class="s1">&#39;away_goals&#39;</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">away_theta</span><span class="p">,</span> <span class="n">observed</span><span class="o">=</span><span class="n">observed_away_goals</span><span class="p">)</span>
+
+    <span class="n">trace</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10000</span><span class="p">,</span> <span class="n">tune</span><span class="o">=</span><span class="mi">1500</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="err">Auto-assigning NUTS sampler...</span>
+<span class="err">Initializing NUTS using jitter+adapt_diag...</span>
+<span class="err">Multiprocess sampling (2 chains in 2 jobs)</span>
+<span class="c">NUTS: [defs_star, atts_star, intercept, tau_def, tau_att, home]</span>
+<span class="err">Sampling 2 chains, 0 divergences: 100%|██████████| 23000/23000 [01:03&lt;00:00, 362.06draws/s]</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">pm</span><span class="o">.</span><span class="n">traceplot</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;intercept&#39;</span><span class="p">,</span> <span class="s1">&#39;home&#39;</span><span class="p">,</span> <span class="s1">&#39;tau_att&#39;</span><span class="p">,</span> <span class="s1">&#39;tau_def&#39;</span><span class="p">]);</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="err">/anaconda3/lib/python3.6/site-packages/arviz/plots/backends/matplotlib/distplot.py:38: UserWarning: Argument backend_kwargs has not effect in matplotlib.plot_distSupplied value won&#39;t be used</span>
+<span class="err">  &quot;Argument backend_kwargs has not effect in matplotlib.plot_dist&quot;</span>
+<span class="err">/anaconda3/lib/python3.6/site-packages/arviz/plots/backends/matplotlib/distplot.py:38: UserWarning: Argument backend_kwargs has not effect in matplotlib.plot_distSupplied value won&#39;t be used</span>
+<span class="err">  &quot;Argument backend_kwargs has not effect in matplotlib.plot_dist&quot;</span>
+<span class="err">/anaconda3/lib/python3.6/site-packages/arviz/plots/backends/matplotlib/distplot.py:38: UserWarning: Argument backend_kwargs has not effect in matplotlib.plot_distSupplied value won&#39;t be used</span>
+<span class="err">  &quot;Argument backend_kwargs has not effect in matplotlib.plot_dist&quot;</span>
+<span class="err">/anaconda3/lib/python3.6/site-packages/arviz/plots/backends/matplotlib/distplot.py:38: UserWarning: Argument backend_kwargs has not effect in matplotlib.plot_distSupplied value won&#39;t be used</span>
+<span class="err">  &quot;Argument backend_kwargs has not effect in matplotlib.plot_dist&quot;</span>
+</pre></div>
+
+
+<p><img alt="png" src="images/output_6_1.png"></p>
+<div class="highlight"><pre><span></span><span class="n">teams</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">home</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+<span class="n">teams</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">teams</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;team&#39;</span><span class="p">])</span>
+<span class="n">teams</span><span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">teams</span><span class="o">.</span><span class="n">index</span>
+<span class="n">teams</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+      <th>13</th>
+      <th>14</th>
+      <th>15</th>
+      <th>16</th>
+      <th>17</th>
+      <th>18</th>
+      <th>19</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>team</th>
+      <td>ARS</td>
+      <td>BOU</td>
+      <td>BHA</td>
+      <td>BUR</td>
+      <td>CAR</td>
+      <td>CHE</td>
+      <td>CRY</td>
+      <td>EVE</td>
+      <td>FUL</td>
+      <td>HUD</td>
+      <td>LEI</td>
+      <td>LIV</td>
+      <td>MCI</td>
+      <td>MUN</td>
+      <td>NEW</td>
+      <td>SOU</td>
+      <td>TOT</td>
+      <td>WAT</td>
+      <td>WHU</td>
+      <td>WOL</td>
+    </tr>
+    <tr>
+      <th>i</th>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
+      <td>5</td>
+      <td>6</td>
+      <td>7</td>
+      <td>8</td>
+      <td>9</td>
+      <td>10</td>
+      <td>11</td>
+      <td>12</td>
+      <td>13</td>
+      <td>14</td>
+      <td>15</td>
+      <td>16</td>
+      <td>17</td>
+      <td>18</td>
+      <td>19</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight"><pre><span></span><span class="n">defs</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">40</span><span class="p">)[</span><span class="s1">&#39;mean&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">atts</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">40</span><span class="p">)[</span><span class="s1">&#39;mean&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">data</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">atts</span><span class="p">,</span> <span class="n">teams</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="n">atts</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;i&quot;</span><span class="p">)</span>
+<span class="n">data</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">defs</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="n">defs</span><span class="o">.</span><span class="n">index</span><span class="o">-</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="n">alt</span><span class="o">.</span><span class="n">Chart</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">mark_point</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+    <span class="n">alt</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="s1">&#39;mean_x&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Mean attack effect&quot;</span><span class="p">)),</span>
+    <span class="n">alt</span><span class="o">.</span><span class="n">Y</span><span class="p">(</span><span class="s1">&#39;mean_y&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Mean defense effect&quot;</span><span class="p">)),</span>
+    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;team:N&#39;</span><span class="p">,</span>
+    <span class="n">tooltip</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;team:N&#39;</span><span class="p">]</span>
+<span class="p">)</span><span class="o">.</span><span class="n">properties</span><span class="p">(</span>
+    <span class="n">width</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mi">500</span>
+<span class="p">)</span>
+</pre></div>
+
+
+<div id="altair-viz-10"></div>
+
+<script type="text/javascript">
+  (function(spec, embedOpt){
+    const outputDiv = document.getElementById("altair-viz-10");
+    const paths = {
+      "vega": "https://cdn.jsdelivr.net/npm//vega@5?noext",
+      "vega-lib": "https://cdn.jsdelivr.net/npm//vega-lib?noext",
+      "vega-lite": "https://cdn.jsdelivr.net/npm//vega-lite@4.0.0?noext",
+      "vega-embed": "https://cdn.jsdelivr.net/npm//vega-embed@6?noext",
+    };
+
+    function loadScript(lib) {
+      return new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = paths[lib];
+        s.async = true;
+        s.onload = () => resolve(paths[lib]);
+        s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
+        document.getElementsByTagName("head")[0].appendChild(s);
+      });
+    }
+
+    function showError(err) {
+      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
+      throw err;
+    }
+
+    function displayChart(vegaEmbed) {
+      vegaEmbed(outputDiv, spec, embedOpt)
+        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
+    }
+
+    if(typeof define === "function" && define.amd) {
+      requirejs.config({paths});
+      require(["vega-embed"], displayChart, err => showError(`Error loading script: ${err.message}`));
+    } else if (typeof vegaEmbed === "function") {
+      displayChart(vegaEmbed);
+    } else {
+      loadScript("vega")
+        .then(() => loadScript("vega-lite"))
+        .then(() => loadScript("vega-embed"))
+        .catch(showError)
+        .then(() => displayChart(vegaEmbed));
+    }
+  })({"config": {"view": {"continuousWidth": 400, "continuousHeight": 300}}, "data": {"name": "data-693c5b01bbd9806e795e21747f5b1fdb"}, "mark": "point", "encoding": {"color": {"type": "nominal", "field": "team"}, "tooltip": [{"type": "nominal", "field": "team"}], "x": {"type": "quantitative", "axis": {"title": "Mean attack effect"}, "field": "mean_x"}, "y": {"type": "quantitative", "axis": {"title": "Mean defense effect"}, "field": "mean_y"}}, "height": 500, "width": 500, "$schema": "https://vega.github.io/schema/vega-lite/v4.0.0.json", "datasets": {"data-693c5b01bbd9806e795e21747f5b1fdb": [{"key_0": 0, "index_x": "atts[0]", "mean_x": 0.39, "team": "ARS", "i": 0, "index_y": "defs[0]", "mean_y": 0.012}, {"key_0": 1, "index_x": "atts[1]", "mean_x": 0.116, "team": "BOU", "i": 1, "index_y": "defs[1]", "mean_y": 0.338}, {"key_0": 2, "index_x": "atts[2]", "mean_x": -0.394, "team": "BHA", "i": 2, "index_y": "defs[2]", "mean_y": 0.152}, {"key_0": 3, "index_x": "atts[3]", "mean_x": -0.122, "team": "BUR", "i": 3, "index_y": "defs[3]", "mean_y": 0.296}, {"key_0": 4, "index_x": "atts[4]", "mean_x": -0.416, "team": "CAR", "i": 4, "index_y": "defs[4]", "mean_y": 0.303}, {"key_0": 5, "index_x": "atts[5]", "mean_x": 0.217, "team": "CHE", "i": 5, "index_y": "defs[5]", "mean_y": -0.28}, {"key_0": 6, "index_x": "atts[6]", "mean_x": 0.001, "team": "CRY", "i": 6, "index_y": "defs[6]", "mean_y": 0.032}, {"key_0": 7, "index_x": "atts[7]", "mean_x": 0.055, "team": "EVE", "i": 7, "index_y": "defs[7]", "mean_y": -0.117}, {"key_0": 8, "index_x": "atts[8]", "mean_x": -0.404, "team": "FUL", "i": 8, "index_y": "defs[8]", "mean_y": 0.478}, {"key_0": 9, "index_x": "atts[9]", "mean_x": -0.84, "team": "HUD", "i": 9, "index_y": "defs[9]", "mean_y": 0.397}, {"key_0": 10, "index_x": "atts[10]", "mean_x": -0.004, "team": "LEI", "i": 10, "index_y": "defs[10]", "mean_y": -0.073}, {"key_0": 11, "index_x": "atts[11]", "mean_x": 0.581, "team": "LIV", "i": 11, "index_y": "defs[11]", "mean_y": -0.819}, {"key_0": 12, "index_x": "atts[12]", "mean_x": 0.653, "team": "MCI", "i": 12, "index_y": "defs[12]", "mean_y": -0.773}, {"key_0": 13, "index_x": "atts[13]", "mean_x": 0.264, "team": "MUN", "i": 13, "index_y": "defs[13]", "mean_y": 0.066}, {"key_0": 14, "index_x": "atts[14]", "mean_x": -0.213, "team": "NEW", "i": 14, "index_y": "defs[14]", "mean_y": -0.081}, {"key_0": 15, "index_x": "atts[15]", "mean_x": -0.124, "team": "SOU", "i": 15, "index_y": "defs[15]", "mean_y": 0.248}, {"key_0": 16, "index_x": "atts[16]", "mean_x": 0.284, "team": "TOT", "i": 16, "index_y": "defs[16]", "mean_y": -0.276}, {"key_0": 17, "index_x": "atts[17]", "mean_x": 0.026, "team": "WAT", "i": 17, "index_y": "defs[17]", "mean_y": 0.149}, {"key_0": 18, "index_x": "atts[18]", "mean_x": 0.024, "team": "WHU", "i": 18, "index_y": "defs[18]", "mean_y": 0.072}, {"key_0": 19, "index_x": "atts[19]", "mean_x": -0.094, "team": "WOL", "i": 19, "index_y": "defs[19]", "mean_y": -0.122}]}}, {"mode": "vega-lite"});
+</script>
+
+<p>As expected top teams (Manchester City &amp; Liverpool) are at the bottom right. These teams have very high positive attack effects and a very negative defense effect. This will lead to very. high scoring intensity in our model.</p>
+<h4>Now that we have our posterior distributions, we can sample from them to simulate a
+season.</h4>
+
+<div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">model</span><span class="p">:</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">sample_posterior_predictive</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="err">100%|██████████| 20000/20000 [00:35&lt;00:00, 558.00it/s]</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">home_goals</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sim</span><span class="p">[</span><span class="s1">&#39;home_goals&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+<span class="n">home_goals</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;team&quot;</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;home&#39;</span><span class="p">])</span>
+<span class="n">away_goals</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sim</span><span class="p">[</span><span class="s1">&#39;home_goals&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+<span class="n">away_goals</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;team&quot;</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;away&#39;</span><span class="p">])</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">total_goals</span><span class="o">=</span><span class="n">home_goals</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;team&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">away_goals</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;team&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">total_goals</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;CHE&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Chelsea&quot;</span><span class="p">);</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">total_goals</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;LIV&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Liverpool FC&quot;</span><span class="p">);</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">total_goals</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;MCI&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Manchester city&quot;</span><span class="p">);</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Total Goals scored (20,000 simulations)&quot;</span><span class="p">);</span>
+</pre></div>
+
+
+<p><img alt="png" src="images/output_14_0.png"></p>
+<div class="highlight"><pre><span></span><span class="n">goal_diff</span><span class="o">=</span><span class="n">sim</span><span class="p">[</span><span class="s1">&#39;home_goals&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">sim</span><span class="p">[</span><span class="s1">&#39;away_goals&#39;</span><span class="p">]</span>
+<span class="n">condlist</span> <span class="o">=</span> <span class="p">[</span><span class="n">goal_diff</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">,</span> <span class="n">goal_diff</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">choicelist</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">goal_diff</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">condlist</span><span class="p">,</span> <span class="n">choicelist</span><span class="p">)</span>
+<span class="n">points</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">goal_diff</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="n">points</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;away_team&quot;</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;away&#39;</span><span class="p">])</span>
+<span class="n">points</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;home_team&quot;</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;home&#39;</span><span class="p">])</span>
+<span class="n">points</span>
+</pre></div>
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>home_team</th>
+      <th>away_team</th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>...</th>
+      <th>19990</th>
+      <th>19991</th>
+      <th>19992</th>
+      <th>19993</th>
+      <th>19994</th>
+      <th>19995</th>
+      <th>19996</th>
+      <th>19997</th>
+      <th>19998</th>
+      <th>19999</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ARS</td>
+      <td>BOU</td>
+      <td>3</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>0</td>
+      <td>3</td>
+      <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>3</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ARS</td>
+      <td>BHA</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>...</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>0</td>
+      <td>3</td>
+      <td>3</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ARS</td>
+      <td>BUR</td>
+      <td>3</td>
+      <td>3</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ARS</td>
+      <td>CAR</td>
+      <td>3</td>
+      <td>0</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>...</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ARS</td>
+      <td>CHE</td>
+      <td>0</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>3</td>
+      <td>...</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>3</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>375</th>
+      <td>WOL</td>
+      <td>NEW</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>3</td>
+      <td>1</td>
+      <td>0</td>
+      <td>...</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>376</th>
+      <td>WOL</td>
+      <td>SOU</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>...</td>
+      <td>0</td>
+      <td>3</td>
+      <td>3</td>
+      <td>0</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>377</th>
+      <td>WOL</td>
+      <td>TOT</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+      <td>3</td>
+      <td>3</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>378</th>
+      <td>WOL</td>
+      <td>WAT</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>0</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>3</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>379</th>
+      <td>WOL</td>
+      <td>WHU</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>3</td>
+    </tr>
+  </tbody>
+</table>
+<p>380 rows × 20002 columns</p>
+</div>
+
+<h4>The table above represents the points scored per game for each of our 20,000 simulated seasons.</h4>
+
+<p>(Each simulated season is a column) Below we continue to explore the results of our simulation.</p>
+<h4>Total points scored per team per simulated season:</h4>
+
+<div class="highlight"><pre><span></span><span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;home_team&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">points</span>
+</pre></div>
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>...</th>
+      <th>19990</th>
+      <th>19991</th>
+      <th>19992</th>
+      <th>19993</th>
+      <th>19994</th>
+      <th>19995</th>
+      <th>19996</th>
+      <th>19997</th>
+      <th>19998</th>
+      <th>19999</th>
+    </tr>
+    <tr>
+      <th>home_team</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>ARS</th>
+      <td>37</td>
+      <td>28</td>
+      <td>25</td>
+      <td>41</td>
+      <td>34</td>
+      <td>29</td>
+      <td>20</td>
+      <td>34</td>
+      <td>31</td>
+      <td>32</td>
+      <td>...</td>
+      <td>33</td>
+      <td>23</td>
+      <td>29</td>
+      <td>35</td>
+      <td>37</td>
+      <td>25</td>
+      <td>29</td>
+      <td>33</td>
+      <td>20</td>
+      <td>36</td>
+    </tr>
+    <tr>
+      <th>BHA</th>
+      <td>20</td>
+      <td>23</td>
+      <td>14</td>
+      <td>23</td>
+      <td>19</td>
+      <td>18</td>
+      <td>19</td>
+      <td>21</td>
+      <td>7</td>
+      <td>18</td>
+      <td>...</td>
+      <td>22</td>
+      <td>23</td>
+      <td>17</td>
+      <td>20</td>
+      <td>19</td>
+      <td>15</td>
+      <td>17</td>
+      <td>15</td>
+      <td>23</td>
+      <td>14</td>
+    </tr>
+    <tr>
+      <th>BOU</th>
+      <td>20</td>
+      <td>21</td>
+      <td>21</td>
+      <td>26</td>
+      <td>25</td>
+      <td>26</td>
+      <td>20</td>
+      <td>17</td>
+      <td>33</td>
+      <td>25</td>
+      <td>...</td>
+      <td>31</td>
+      <td>27</td>
+      <td>32</td>
+      <td>17</td>
+      <td>23</td>
+      <td>28</td>
+      <td>27</td>
+      <td>22</td>
+      <td>20</td>
+      <td>32</td>
+    </tr>
+    <tr>
+      <th>BUR</th>
+      <td>19</td>
+      <td>14</td>
+      <td>15</td>
+      <td>21</td>
+      <td>20</td>
+      <td>14</td>
+      <td>17</td>
+      <td>26</td>
+      <td>17</td>
+      <td>14</td>
+      <td>...</td>
+      <td>19</td>
+      <td>27</td>
+      <td>23</td>
+      <td>17</td>
+      <td>17</td>
+      <td>18</td>
+      <td>25</td>
+      <td>13</td>
+      <td>11</td>
+      <td>21</td>
+    </tr>
+    <tr>
+      <th>CAR</th>
+      <td>20</td>
+      <td>15</td>
+      <td>20</td>
+      <td>20</td>
+      <td>14</td>
+      <td>6</td>
+      <td>16</td>
+      <td>20</td>
+      <td>18</td>
+      <td>17</td>
+      <td>...</td>
+      <td>11</td>
+      <td>21</td>
+      <td>15</td>
+      <td>19</td>
+      <td>13</td>
+      <td>7</td>
+      <td>23</td>
+      <td>28</td>
+      <td>10</td>
+      <td>21</td>
+    </tr>
+    <tr>
+      <th>CHE</th>
+      <td>39</td>
+      <td>27</td>
+      <td>33</td>
+      <td>31</td>
+      <td>43</td>
+      <td>25</td>
+      <td>39</td>
+      <td>36</td>
+      <td>33</td>
+      <td>43</td>
+      <td>...</td>
+      <td>29</td>
+      <td>31</td>
+      <td>29</td>
+      <td>32</td>
+      <td>37</td>
+      <td>27</td>
+      <td>34</td>
+      <td>39</td>
+      <td>32</td>
+      <td>40</td>
+    </tr>
+    <tr>
+      <th>CRY</th>
+      <td>23</td>
+      <td>26</td>
+      <td>24</td>
+      <td>28</td>
+      <td>20</td>
+      <td>46</td>
+      <td>24</td>
+      <td>37</td>
+      <td>18</td>
+      <td>18</td>
+      <td>...</td>
+      <td>31</td>
+      <td>14</td>
+      <td>22</td>
+      <td>27</td>
+      <td>20</td>
+      <td>29</td>
+      <td>33</td>
+      <td>27</td>
+      <td>29</td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <th>EVE</th>
+      <td>23</td>
+      <td>30</td>
+      <td>22</td>
+      <td>26</td>
+      <td>28</td>
+      <td>34</td>
+      <td>32</td>
+      <td>22</td>
+      <td>24</td>
+      <td>27</td>
+      <td>...</td>
+      <td>36</td>
+      <td>23</td>
+      <td>27</td>
+      <td>25</td>
+      <td>34</td>
+      <td>23</td>
+      <td>12</td>
+      <td>36</td>
+      <td>20</td>
+      <td>35</td>
+    </tr>
+    <tr>
+      <th>FUL</th>
+      <td>10</td>
+      <td>10</td>
+      <td>8</td>
+      <td>15</td>
+      <td>13</td>
+      <td>4</td>
+      <td>8</td>
+      <td>5</td>
+      <td>17</td>
+      <td>10</td>
+      <td>...</td>
+      <td>14</td>
+      <td>18</td>
+      <td>13</td>
+      <td>14</td>
+      <td>10</td>
+      <td>15</td>
+      <td>9</td>
+      <td>10</td>
+      <td>12</td>
+      <td>12</td>
+    </tr>
+    <tr>
+      <th>HUD</th>
+      <td>19</td>
+      <td>25</td>
+      <td>4</td>
+      <td>8</td>
+      <td>8</td>
+      <td>10</td>
+      <td>10</td>
+      <td>11</td>
+      <td>12</td>
+      <td>4</td>
+      <td>...</td>
+      <td>11</td>
+      <td>12</td>
+      <td>11</td>
+      <td>9</td>
+      <td>9</td>
+      <td>9</td>
+      <td>14</td>
+      <td>15</td>
+      <td>1</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>LEI</th>
+      <td>20</td>
+      <td>28</td>
+      <td>35</td>
+      <td>23</td>
+      <td>30</td>
+      <td>29</td>
+      <td>32</td>
+      <td>36</td>
+      <td>18</td>
+      <td>22</td>
+      <td>...</td>
+      <td>26</td>
+      <td>19</td>
+      <td>24</td>
+      <td>19</td>
+      <td>38</td>
+      <td>23</td>
+      <td>28</td>
+      <td>31</td>
+      <td>26</td>
+      <td>27</td>
+    </tr>
+    <tr>
+      <th>LIV</th>
+      <td>50</td>
+      <td>46</td>
+      <td>46</td>
+      <td>46</td>
+      <td>47</td>
+      <td>40</td>
+      <td>48</td>
+      <td>47</td>
+      <td>44</td>
+      <td>48</td>
+      <td>...</td>
+      <td>40</td>
+      <td>39</td>
+      <td>43</td>
+      <td>42</td>
+      <td>53</td>
+      <td>40</td>
+      <td>35</td>
+      <td>48</td>
+      <td>39</td>
+      <td>50</td>
+    </tr>
+    <tr>
+      <th>MCI</th>
+      <td>46</td>
+      <td>39</td>
+      <td>37</td>
+      <td>44</td>
+      <td>40</td>
+      <td>40</td>
+      <td>43</td>
+      <td>46</td>
+      <td>49</td>
+      <td>53</td>
+      <td>...</td>
+      <td>44</td>
+      <td>37</td>
+      <td>46</td>
+      <td>46</td>
+      <td>53</td>
+      <td>40</td>
+      <td>41</td>
+      <td>46</td>
+      <td>43</td>
+      <td>48</td>
+    </tr>
+    <tr>
+      <th>MUN</th>
+      <td>36</td>
+      <td>38</td>
+      <td>29</td>
+      <td>36</td>
+      <td>25</td>
+      <td>36</td>
+      <td>26</td>
+      <td>24</td>
+      <td>41</td>
+      <td>27</td>
+      <td>...</td>
+      <td>30</td>
+      <td>24</td>
+      <td>22</td>
+      <td>25</td>
+      <td>37</td>
+      <td>23</td>
+      <td>37</td>
+      <td>30</td>
+      <td>25</td>
+      <td>30</td>
+    </tr>
+    <tr>
+      <th>NEW</th>
+      <td>23</td>
+      <td>22</td>
+      <td>30</td>
+      <td>21</td>
+      <td>24</td>
+      <td>25</td>
+      <td>29</td>
+      <td>28</td>
+      <td>19</td>
+      <td>13</td>
+      <td>...</td>
+      <td>29</td>
+      <td>29</td>
+      <td>25</td>
+      <td>20</td>
+      <td>20</td>
+      <td>34</td>
+      <td>27</td>
+      <td>27</td>
+      <td>18</td>
+      <td>12</td>
+    </tr>
+    <tr>
+      <th>SOU</th>
+      <td>17</td>
+      <td>20</td>
+      <td>29</td>
+      <td>11</td>
+      <td>26</td>
+      <td>20</td>
+      <td>19</td>
+      <td>24</td>
+      <td>24</td>
+      <td>28</td>
+      <td>...</td>
+      <td>21</td>
+      <td>14</td>
+      <td>28</td>
+      <td>20</td>
+      <td>17</td>
+      <td>21</td>
+      <td>13</td>
+      <td>22</td>
+      <td>14</td>
+      <td>25</td>
+    </tr>
+    <tr>
+      <th>TOT</th>
+      <td>32</td>
+      <td>36</td>
+      <td>30</td>
+      <td>39</td>
+      <td>31</td>
+      <td>25</td>
+      <td>44</td>
+      <td>33</td>
+      <td>46</td>
+      <td>39</td>
+      <td>...</td>
+      <td>44</td>
+      <td>27</td>
+      <td>32</td>
+      <td>28</td>
+      <td>32</td>
+      <td>34</td>
+      <td>34</td>
+      <td>29</td>
+      <td>35</td>
+      <td>36</td>
+    </tr>
+    <tr>
+      <th>WAT</th>
+      <td>25</td>
+      <td>18</td>
+      <td>19</td>
+      <td>28</td>
+      <td>22</td>
+      <td>26</td>
+      <td>29</td>
+      <td>22</td>
+      <td>25</td>
+      <td>38</td>
+      <td>...</td>
+      <td>22</td>
+      <td>31</td>
+      <td>21</td>
+      <td>23</td>
+      <td>18</td>
+      <td>24</td>
+      <td>30</td>
+      <td>29</td>
+      <td>24</td>
+      <td>21</td>
+    </tr>
+    <tr>
+      <th>WHU</th>
+      <td>35</td>
+      <td>32</td>
+      <td>23</td>
+      <td>24</td>
+      <td>26</td>
+      <td>23</td>
+      <td>27</td>
+      <td>13</td>
+      <td>20</td>
+      <td>22</td>
+      <td>...</td>
+      <td>27</td>
+      <td>24</td>
+      <td>29</td>
+      <td>24</td>
+      <td>24</td>
+      <td>32</td>
+      <td>28</td>
+      <td>30</td>
+      <td>25</td>
+      <td>37</td>
+    </tr>
+    <tr>
+      <th>WOL</th>
+      <td>26</td>
+      <td>33</td>
+      <td>25</td>
+      <td>36</td>
+      <td>32</td>
+      <td>26</td>
+      <td>32</td>
+      <td>20</td>
+      <td>33</td>
+      <td>21</td>
+      <td>...</td>
+      <td>21</td>
+      <td>22</td>
+      <td>20</td>
+      <td>33</td>
+      <td>25</td>
+      <td>18</td>
+      <td>18</td>
+      <td>32</td>
+      <td>26</td>
+      <td>26</td>
+    </tr>
+  </tbody>
+</table>
+<p>20 rows × 20000 columns</p>
+</div>
+
+<h4>League ranking per team per simulated season:</h4>
+
+<div class="highlight"><pre><span></span><span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">points</span>
+</pre></div>
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>...</th>
+      <th>19990</th>
+      <th>19991</th>
+      <th>19992</th>
+      <th>19993</th>
+      <th>19994</th>
+      <th>19995</th>
+      <th>19996</th>
+      <th>19997</th>
+      <th>19998</th>
+      <th>19999</th>
+    </tr>
+    <tr>
+      <th>home_team</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>ARS</th>
+      <td>4.0</td>
+      <td>8.0</td>
+      <td>9.0</td>
+      <td>3.0</td>
+      <td>4.0</td>
+      <td>6.0</td>
+      <td>13.0</td>
+      <td>6.0</td>
+      <td>8.0</td>
+      <td>6.0</td>
+      <td>...</td>
+      <td>5.0</td>
+      <td>11.0</td>
+      <td>5.0</td>
+      <td>3.0</td>
+      <td>4.0</td>
+      <td>9.0</td>
+      <td>8.0</td>
+      <td>5.0</td>
+      <td>12.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>BHA</th>
+      <td>13.0</td>
+      <td>13.0</td>
+      <td>18.0</td>
+      <td>13.0</td>
+      <td>17.0</td>
+      <td>16.0</td>
+      <td>15.0</td>
+      <td>14.0</td>
+      <td>20.0</td>
+      <td>14.0</td>
+      <td>...</td>
+      <td>13.0</td>
+      <td>11.0</td>
+      <td>17.0</td>
+      <td>12.0</td>
+      <td>14.0</td>
+      <td>17.0</td>
+      <td>16.0</td>
+      <td>17.0</td>
+      <td>11.0</td>
+      <td>17.0</td>
+    </tr>
+    <tr>
+      <th>BOU</th>
+      <td>13.0</td>
+      <td>15.0</td>
+      <td>14.0</td>
+      <td>10.0</td>
+      <td>11.0</td>
+      <td>8.0</td>
+      <td>13.0</td>
+      <td>17.0</td>
+      <td>5.0</td>
+      <td>10.0</td>
+      <td>...</td>
+      <td>6.0</td>
+      <td>6.0</td>
+      <td>3.0</td>
+      <td>17.0</td>
+      <td>11.0</td>
+      <td>7.0</td>
+      <td>11.0</td>
+      <td>15.0</td>
+      <td>12.0</td>
+      <td>8.0</td>
+    </tr>
+    <tr>
+      <th>BUR</th>
+      <td>17.0</td>
+      <td>19.0</td>
+      <td>17.0</td>
+      <td>15.0</td>
+      <td>15.0</td>
+      <td>17.0</td>
+      <td>17.0</td>
+      <td>9.0</td>
+      <td>17.0</td>
+      <td>17.0</td>
+      <td>...</td>
+      <td>17.0</td>
+      <td>6.0</td>
+      <td>12.0</td>
+      <td>17.0</td>
+      <td>16.0</td>
+      <td>15.0</td>
+      <td>13.0</td>
+      <td>19.0</td>
+      <td>18.0</td>
+      <td>13.0</td>
+    </tr>
+    <tr>
+      <th>CAR</th>
+      <td>13.0</td>
+      <td>18.0</td>
+      <td>15.0</td>
+      <td>17.0</td>
+      <td>18.0</td>
+      <td>19.0</td>
+      <td>18.0</td>
+      <td>15.0</td>
+      <td>14.0</td>
+      <td>16.0</td>
+      <td>...</td>
+      <td>19.0</td>
+      <td>15.0</td>
+      <td>18.0</td>
+      <td>15.0</td>
+      <td>18.0</td>
+      <td>20.0</td>
+      <td>14.0</td>
+      <td>12.0</td>
+      <td>19.0</td>
+      <td>13.0</td>
+    </tr>
+    <tr>
+      <th>CHE</th>
+      <td>3.0</td>
+      <td>10.0</td>
+      <td>4.0</td>
+      <td>7.0</td>
+      <td>2.0</td>
+      <td>11.0</td>
+      <td>4.0</td>
+      <td>4.0</td>
+      <td>5.0</td>
+      <td>3.0</td>
+      <td>...</td>
+      <td>9.0</td>
+      <td>3.0</td>
+      <td>5.0</td>
+      <td>5.0</td>
+      <td>4.0</td>
+      <td>8.0</td>
+      <td>4.0</td>
+      <td>3.0</td>
+      <td>4.0</td>
+      <td>3.0</td>
+    </tr>
+    <tr>
+      <th>CRY</th>
+      <td>10.0</td>
+      <td>11.0</td>
+      <td>11.0</td>
+      <td>8.0</td>
+      <td>15.0</td>
+      <td>1.0</td>
+      <td>12.0</td>
+      <td>3.0</td>
+      <td>14.0</td>
+      <td>14.0</td>
+      <td>...</td>
+      <td>6.0</td>
+      <td>18.0</td>
+      <td>13.0</td>
+      <td>7.0</td>
+      <td>12.0</td>
+      <td>6.0</td>
+      <td>6.0</td>
+      <td>13.0</td>
+      <td>5.0</td>
+      <td>16.0</td>
+    </tr>
+    <tr>
+      <th>EVE</th>
+      <td>10.0</td>
+      <td>7.0</td>
+      <td>13.0</td>
+      <td>10.0</td>
+      <td>8.0</td>
+      <td>5.0</td>
+      <td>5.0</td>
+      <td>12.0</td>
+      <td>10.0</td>
+      <td>8.0</td>
+      <td>...</td>
+      <td>4.0</td>
+      <td>11.0</td>
+      <td>9.0</td>
+      <td>8.0</td>
+      <td>7.0</td>
+      <td>11.0</td>
+      <td>19.0</td>
+      <td>4.0</td>
+      <td>12.0</td>
+      <td>7.0</td>
+    </tr>
+    <tr>
+      <th>FUL</th>
+      <td>20.0</td>
+      <td>20.0</td>
+      <td>19.0</td>
+      <td>18.0</td>
+      <td>19.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+      <td>17.0</td>
+      <td>19.0</td>
+      <td>...</td>
+      <td>18.0</td>
+      <td>17.0</td>
+      <td>19.0</td>
+      <td>19.0</td>
+      <td>19.0</td>
+      <td>17.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+      <td>17.0</td>
+      <td>18.0</td>
+    </tr>
+    <tr>
+      <th>HUD</th>
+      <td>17.0</td>
+      <td>12.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+      <td>18.0</td>
+      <td>19.0</td>
+      <td>19.0</td>
+      <td>19.0</td>
+      <td>20.0</td>
+      <td>...</td>
+      <td>19.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+      <td>19.0</td>
+      <td>17.0</td>
+      <td>17.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>LEI</th>
+      <td>13.0</td>
+      <td>8.0</td>
+      <td>3.0</td>
+      <td>13.0</td>
+      <td>7.0</td>
+      <td>6.0</td>
+      <td>5.0</td>
+      <td>4.0</td>
+      <td>14.0</td>
+      <td>11.0</td>
+      <td>...</td>
+      <td>12.0</td>
+      <td>16.0</td>
+      <td>11.0</td>
+      <td>15.0</td>
+      <td>3.0</td>
+      <td>11.0</td>
+      <td>9.0</td>
+      <td>7.0</td>
+      <td>6.0</td>
+      <td>10.0</td>
+    </tr>
+    <tr>
+      <th>LIV</th>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>2.0</td>
+      <td>...</td>
+      <td>3.0</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>MCI</th>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>3.0</td>
+      <td>2.0</td>
+      <td>3.0</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>...</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <th>MUN</th>
+      <td>5.0</td>
+      <td>3.0</td>
+      <td>7.0</td>
+      <td>5.0</td>
+      <td>11.0</td>
+      <td>4.0</td>
+      <td>11.0</td>
+      <td>10.0</td>
+      <td>4.0</td>
+      <td>8.0</td>
+      <td>...</td>
+      <td>8.0</td>
+      <td>9.0</td>
+      <td>13.0</td>
+      <td>8.0</td>
+      <td>4.0</td>
+      <td>11.0</td>
+      <td>2.0</td>
+      <td>8.0</td>
+      <td>8.0</td>
+      <td>9.0</td>
+    </tr>
+    <tr>
+      <th>NEW</th>
+      <td>10.0</td>
+      <td>14.0</td>
+      <td>5.0</td>
+      <td>15.0</td>
+      <td>13.0</td>
+      <td>11.0</td>
+      <td>8.0</td>
+      <td>8.0</td>
+      <td>13.0</td>
+      <td>18.0</td>
+      <td>...</td>
+      <td>9.0</td>
+      <td>5.0</td>
+      <td>10.0</td>
+      <td>12.0</td>
+      <td>12.0</td>
+      <td>3.0</td>
+      <td>11.0</td>
+      <td>13.0</td>
+      <td>15.0</td>
+      <td>18.0</td>
+    </tr>
+    <tr>
+      <th>SOU</th>
+      <td>19.0</td>
+      <td>16.0</td>
+      <td>7.0</td>
+      <td>19.0</td>
+      <td>9.0</td>
+      <td>15.0</td>
+      <td>15.0</td>
+      <td>10.0</td>
+      <td>10.0</td>
+      <td>7.0</td>
+      <td>...</td>
+      <td>15.0</td>
+      <td>18.0</td>
+      <td>8.0</td>
+      <td>12.0</td>
+      <td>16.0</td>
+      <td>14.0</td>
+      <td>18.0</td>
+      <td>15.0</td>
+      <td>16.0</td>
+      <td>12.0</td>
+    </tr>
+    <tr>
+      <th>TOT</th>
+      <td>7.0</td>
+      <td>4.0</td>
+      <td>5.0</td>
+      <td>4.0</td>
+      <td>6.0</td>
+      <td>11.0</td>
+      <td>2.0</td>
+      <td>7.0</td>
+      <td>2.0</td>
+      <td>4.0</td>
+      <td>...</td>
+      <td>1.0</td>
+      <td>6.0</td>
+      <td>3.0</td>
+      <td>6.0</td>
+      <td>8.0</td>
+      <td>3.0</td>
+      <td>4.0</td>
+      <td>10.0</td>
+      <td>3.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>WAT</th>
+      <td>9.0</td>
+      <td>17.0</td>
+      <td>16.0</td>
+      <td>8.0</td>
+      <td>14.0</td>
+      <td>8.0</td>
+      <td>8.0</td>
+      <td>12.0</td>
+      <td>9.0</td>
+      <td>5.0</td>
+      <td>...</td>
+      <td>13.0</td>
+      <td>3.0</td>
+      <td>15.0</td>
+      <td>11.0</td>
+      <td>15.0</td>
+      <td>10.0</td>
+      <td>7.0</td>
+      <td>10.0</td>
+      <td>10.0</td>
+      <td>13.0</td>
+    </tr>
+    <tr>
+      <th>WHU</th>
+      <td>6.0</td>
+      <td>6.0</td>
+      <td>12.0</td>
+      <td>12.0</td>
+      <td>9.0</td>
+      <td>14.0</td>
+      <td>10.0</td>
+      <td>18.0</td>
+      <td>12.0</td>
+      <td>11.0</td>
+      <td>...</td>
+      <td>11.0</td>
+      <td>9.0</td>
+      <td>5.0</td>
+      <td>10.0</td>
+      <td>10.0</td>
+      <td>5.0</td>
+      <td>9.0</td>
+      <td>8.0</td>
+      <td>8.0</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>WOL</th>
+      <td>8.0</td>
+      <td>5.0</td>
+      <td>9.0</td>
+      <td>5.0</td>
+      <td>5.0</td>
+      <td>8.0</td>
+      <td>5.0</td>
+      <td>15.0</td>
+      <td>5.0</td>
+      <td>13.0</td>
+      <td>...</td>
+      <td>15.0</td>
+      <td>14.0</td>
+      <td>16.0</td>
+      <td>4.0</td>
+      <td>9.0</td>
+      <td>15.0</td>
+      <td>15.0</td>
+      <td>6.0</td>
+      <td>6.0</td>
+      <td>11.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>20 rows × 20000 columns</p>
+</div>
+
+<div class="highlight"><pre><span></span><span class="n">mci</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Chart</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;MCI&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span><span class="o">.</span><span class="n">mark_bar</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+    <span class="n">alt</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="s1">&#39;MCI:Q&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Manchester City&quot;</span><span class="p">)),</span>
+    <span class="n">alt</span><span class="o">.</span><span class="n">Y</span><span class="p">(</span><span class="s1">&#39;index:N&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;League Position&quot;</span><span class="p">)))</span><span class="o">.</span><span class="n">properties</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span><span class="n">height</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="n">liv</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Chart</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;LIV&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span><span class="o">.</span><span class="n">mark_bar</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+    <span class="n">alt</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="s1">&#39;LIV:Q&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Liverpool&quot;</span><span class="p">)),</span>
+    <span class="n">alt</span><span class="o">.</span><span class="n">Y</span><span class="p">(</span><span class="s1">&#39;index:N&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;League Position&quot;</span><span class="p">)))</span><span class="o">.</span><span class="n">properties</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span><span class="n">height</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="n">che</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Chart</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;CHE&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span><span class="o">.</span><span class="n">mark_bar</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+    <span class="n">alt</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="s1">&#39;CHE:Q&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Chelsea&quot;</span><span class="p">)),</span>
+    <span class="n">alt</span><span class="o">.</span><span class="n">Y</span><span class="p">(</span><span class="s1">&#39;index:N&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;League Position&quot;</span><span class="p">)))</span><span class="o">.</span><span class="n">properties</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span><span class="n">height</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="n">mci</span><span class="o">|</span> <span class="n">liv</span> <span class="o">|</span> <span class="n">che</span>
+</pre></div>
+
+
+<div id="altair-viz-19"></div>
+
+<script type="text/javascript">
+  (function(spec, embedOpt){
+    const outputDiv = document.getElementById("altair-viz-19");
+    const paths = {
+      "vega": "https://cdn.jsdelivr.net/npm//vega@5?noext",
+      "vega-lib": "https://cdn.jsdelivr.net/npm//vega-lib?noext",
+      "vega-lite": "https://cdn.jsdelivr.net/npm//vega-lite@4.0.0?noext",
+      "vega-embed": "https://cdn.jsdelivr.net/npm//vega-embed@6?noext",
+    };
+
+    function loadScript(lib) {
+      return new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = paths[lib];
+        s.async = true;
+        s.onload = () => resolve(paths[lib]);
+        s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
+        document.getElementsByTagName("head")[0].appendChild(s);
+      });
+    }
+
+    function showError(err) {
+      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
+      throw err;
+    }
+
+    function displayChart(vegaEmbed) {
+      vegaEmbed(outputDiv, spec, embedOpt)
+        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
+    }
+
+    if(typeof define === "function" && define.amd) {
+      requirejs.config({paths});
+      require(["vega-embed"], displayChart, err => showError(`Error loading script: ${err.message}`));
+    } else if (typeof vegaEmbed === "function") {
+      displayChart(vegaEmbed);
+    } else {
+      loadScript("vega")
+        .then(() => loadScript("vega-lite"))
+        .then(() => loadScript("vega-embed"))
+        .catch(showError)
+        .then(() => displayChart(vegaEmbed));
+    }
+  })({"config": {"view": {"continuousWidth": 400, "continuousHeight": 300}}, "hconcat": [{"data": {"name": "data-e9c60fa40c97c5e2c1c08d7db4b89a56"}, "mark": "bar", "encoding": {"x": {"type": "quantitative", "axis": {"title": "Manchester City"}, "field": "MCI"}, "y": {"type": "nominal", "axis": {"title": "League Position"}, "field": "index"}}, "height": 100, "width": 300}, {"data": {"name": "data-37277872a0b8e91ff4184b4c777cab14"}, "mark": "bar", "encoding": {"x": {"type": "quantitative", "axis": {"title": "Liverpool"}, "field": "LIV"}, "y": {"type": "nominal", "axis": {"title": "League Position"}, "field": "index"}}, "height": 100, "width": 300}, {"data": {"name": "data-b9ceefca32eceb8e5949c9359d11e43c"}, "mark": "bar", "encoding": {"x": {"type": "quantitative", "axis": {"title": "Chelsea"}, "field": "CHE"}, "y": {"type": "nominal", "axis": {"title": "League Position"}, "field": "index"}}, "height": 100, "width": 300}], "$schema": "https://vega.github.io/schema/vega-lite/v4.0.0.json", "datasets": {"data-e9c60fa40c97c5e2c1c08d7db4b89a56": [{"index": 1.0, "MCI": 10787}, {"index": 2.0, "MCI": 6593}, {"index": 3.0, "MCI": 1740}, {"index": 4.0, "MCI": 507}, {"index": 5.0, "MCI": 224}], "data-37277872a0b8e91ff4184b4c777cab14": [{"index": 1.0, "LIV": 9036}, {"index": 2.0, "LIV": 7672}, {"index": 3.0, "LIV": 2038}, {"index": 4.0, "LIV": 741}, {"index": 5.0, "LIV": 305}], "data-b9ceefca32eceb8e5949c9359d11e43c": [{"index": 3.0, "CHE": 3687}, {"index": 4.0, "CHE": 3357}, {"index": 5.0, "CHE": 2685}, {"index": 6.0, "CHE": 2180}, {"index": 7.0, "CHE": 1672}]}}, {"mode": "vega-lite"});
+</script>
+
+<p>In our simulations, Manchester City ranked first over 10,500 times. Liverpool came in a close second. For Chelsea, the most commonly occuring position seems to be thrid.</p>
+<h4> Probability of finishing in the top 5</h4>
+
+<div class="highlight"><pre><span></span><span class="n">top5</span><span class="o">=</span><span class="n">points</span><span class="o">.</span><span class="n">applymap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">&lt;=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">top5</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">top5</span><span class="o">/</span><span class="mi">20000</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">top5</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;prob&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span> <span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">alt</span><span class="o">.</span><span class="n">Chart</span><span class="p">(</span><span class="n">top5</span><span class="p">)</span><span class="o">.</span><span class="n">mark_bar</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+    <span class="n">alt</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="s1">&#39;prob:Q&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Probability of finishing in the top 5&quot;</span><span class="p">)),</span>
+    <span class="n">alt</span><span class="o">.</span><span class="n">Y</span><span class="p">(</span><span class="s1">&#39;home_team:N&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Team&quot;</span><span class="p">)))</span><span class="o">.</span><span class="n">properties</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">700</span><span class="p">,</span><span class="n">height</span><span class="o">=</span><span class="mi">900</span><span class="p">)</span>
+</pre></div>
+
+
+<div id="altair-viz-26"></div>
+
+<script type="text/javascript">
+  (function(spec, embedOpt){
+    const outputDiv = document.getElementById("altair-viz-26");
+    const paths = {
+      "vega": "https://cdn.jsdelivr.net/npm//vega@5?noext",
+      "vega-lib": "https://cdn.jsdelivr.net/npm//vega-lib?noext",
+      "vega-lite": "https://cdn.jsdelivr.net/npm//vega-lite@4.0.0?noext",
+      "vega-embed": "https://cdn.jsdelivr.net/npm//vega-embed@6?noext",
+    };
+
+    function loadScript(lib) {
+      return new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = paths[lib];
+        s.async = true;
+        s.onload = () => resolve(paths[lib]);
+        s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
+        document.getElementsByTagName("head")[0].appendChild(s);
+      });
+    }
+
+    function showError(err) {
+      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
+      throw err;
+    }
+
+    function displayChart(vegaEmbed) {
+      vegaEmbed(outputDiv, spec, embedOpt)
+        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
+    }
+
+    if(typeof define === "function" && define.amd) {
+      requirejs.config({paths});
+      require(["vega-embed"], displayChart, err => showError(`Error loading script: ${err.message}`));
+    } else if (typeof vegaEmbed === "function") {
+      displayChart(vegaEmbed);
+    } else {
+      loadScript("vega")
+        .then(() => loadScript("vega-lite"))
+        .then(() => loadScript("vega-embed"))
+        .catch(showError)
+        .then(() => displayChart(vegaEmbed));
+    }
+  })({"config": {"view": {"continuousWidth": 400, "continuousHeight": 300}}, "data": {"name": "data-0a0c199d9382578ea13b304afec36b91"}, "mark": "bar", "encoding": {"x": {"type": "quantitative", "axis": {"title": "Probability of finishing in the top 5"}, "field": "prob"}, "y": {"type": "nominal", "axis": {"title": "Team"}, "field": "home_team"}}, "height": 900, "width": 700, "$schema": "https://vega.github.io/schema/vega-lite/v4.0.0.json", "datasets": {"data-0a0c199d9382578ea13b304afec36b91": [{"home_team": "MCI", "prob": 0.99255}, {"home_team": "LIV", "prob": 0.9896}, {"home_team": "TOT", "prob": 0.6521}, {"home_team": "CHE", "prob": 0.57975}, {"home_team": "ARS", "prob": 0.5293}, {"home_team": "MUN", "prob": 0.32415}, {"home_team": "EVE", "prob": 0.268}, {"home_team": "LEI", "prob": 0.1874}, {"home_team": "WOL", "prob": 0.161}, {"home_team": "CRY", "prob": 0.1384}, {"home_team": "WHU", "prob": 0.12905}, {"home_team": "WAT", "prob": 0.09665}, {"home_team": "NEW", "prob": 0.0828}, {"home_team": "BOU", "prob": 0.06035}, {"home_team": "SOU", "prob": 0.02565}, {"home_team": "BUR", "prob": 0.0219}, {"home_team": "BHA", "prob": 0.01075}, {"home_team": "CAR", "prob": 0.0036}, {"home_team": "FUL", "prob": 0.00095}, {"home_team": "HUD", "prob": 0.0002}]}}, {"mode": "vega-lite"});
+</script>
+    </div>
+  </article>
+
+
+
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="./authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="./archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="./categories.html">Categories</a></li>
+      <li class="list-inline-item"><a href="./tags.html">Tags</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+
+</body>
+
+</html>

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-W7NZXFV');</script>
+  <!-- End Google Tag Manager -->
+
+  <title>  Minkowski distance and its effects on KNN Classification | dark_coffee
+</title>
+  <link rel="canonical" href="./Minkowski_distance.html">
+
+
+  <link rel="stylesheet" href="./theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./theme/css/fontawesome.min.css">
+  <link rel="stylesheet" href="./theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="./theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://rittik97.github.io/Blog/feeds/data-science.atom.xml">  
+  <meta name="description" content="Minkowski distance is a generalized version of the distance calculations we are accustomed to. It can be defined as: Euclidean & Manhattan distance: Manhattan distances are the sum of absolute differences between the Cartesian coordinates of the points in question. Manhattan distances can be thought of as the sum of the …">
+
+
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W7NZXFV"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="./">dark_coffee</a></h1>
+  </div>
+</div>    </div>
+  </header>
+  <div class="main">
+    <div class="container">
+    <div class="row">
+      <ul class="col-sm-6 list-inline">
+        <li class="list-inline-item"><a href="https://github.com/rittik97">Github</a></li>
+        <li class="list-inline-item"><a href="https://www.linkedin.com/in/rittikghosh/">LinkedIn</a></li>
+        <li class="list-inline-item"><a href="./categories.html">Categories</a></li>
+      </ul>
+      <hr />
+    </div>
+  </div>
+  </div>
+  <div class="main">
+
+    <div class="container">
+      <h1>  Minkowski distance and its effects on KNN Classification
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2020-01-05T16:33:00-05:00">
+          <i class="fas fa-clock"></i>
+          Sun 05 January 2020
+        </li>
+        <li class="list-inline-item">
+          <i class="fas fa-folder-open"></i>
+          <a href="./category/data-science.html">Data Science</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fas fa-user"></i>
+              <a href="./author/rittik-ghosh.html">Rittik Ghosh</a>          </li>
+          <li class="list-inline-item">
+            <i class="fas fa-tag"></i>
+              <a href="./tag/decision-boundry.html">#Decision Boundry</a>,               <a href="./tag/classification.html">#Classification</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>Minkowski distance is a generalized version of the distance calculations we are accustomed to. It can be defined as:</p>
+<p><img src='images/min.png'>
+<br>
+<img src='images/Manhattan.png'></p>
+<h6>Euclidean & Manhattan distance:</h6>
+
+<p>Manhattan distances are the sum of absolute differences between the Cartesian coordinates of the points in question. Manhattan distances can be thought of as the sum of the sides of a right-angled triangle while Euclidean distances represent the hypotenuse of the triangle. Hence, Manhattan distances are usually larger than Euclidean distances. The name alludes to the path cars would take to travel between intersections in the higly grid like street layout on the island of Manhattan. </p>
+<p>In the Minkowski equation above, when p=2, we get our familar Euclidian distance (also referred to as the L2-norm or L2 Distance). When p equals 1 we get the Manhattan distance. Manhattan distances can also find them selves called L1 norm, L1 distance, city-block distance and even LASSO. New York must really be the London of our times to even inspire geometry.</p>
+<p>As p tends to infinity we get another famous distance, the Chebyshev distance. Manhattan, Euclidean, Chebyshev, and Minkowski distances are part of the scikit-learn DistanceMetric class and can be used to tune classifiers such as KNN or clustering alogorithms such as DBSCAN.  </p>
+<p>In the graph to the left below, we plot the distance between the points (-2, 3) and (2, 6). For regular euclidean distance, we expect the distance between the points to be 2, and we can see that in the graph that the value is 5 for p=2 but as p increases the distance tends to converge at 4.</p>
+<p>We can also note that the distance computed can vary wildly based on the value of p and the coordinates of the points.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">minkowski</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="n">y1</span><span class="p">,</span><span class="n">y2</span><span class="p">,</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">t</span><span class="o">=</span><span class="p">(</span><span class="n">x2</span><span class="o">-</span><span class="n">x1</span><span class="p">)</span><span class="o">**</span><span class="n">p</span><span class="o">+</span><span class="p">(</span><span class="n">y2</span><span class="o">-</span><span class="n">y1</span><span class="p">)</span><span class="o">**</span><span class="n">p</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="mi">1</span><span class="o">/</span><span class="n">p</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">distances</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="n">y1</span><span class="p">,</span><span class="n">y2</span><span class="p">):</span>
+    <span class="n">dist</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">p</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">50</span><span class="p">):</span>
+        <span class="n">dist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">minkowski</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="n">y1</span><span class="p">,</span><span class="n">y2</span><span class="p">,</span><span class="n">i</span><span class="p">))</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span><span class="n">p</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;distance&#39;</span><span class="p">,</span><span class="s1">&#39;p&#39;</span><span class="p">])</span>    
+
+<span class="n">chart1</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Chart</span><span class="p">(</span><span class="n">distances</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span><span class="o">.</span><span class="n">mark_line</span><span class="p">()</span>
+<span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Y</span><span class="p">(</span><span class="s1">&#39;distance&#39;</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Scale</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span><span class="n">clamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span>
+<span class="o">.</span><span class="n">properties</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Distance between (-2,3) &amp; (2,6)&quot;</span><span class="p">)</span>
+<span class="n">chart2</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Chart</span><span class="p">(</span><span class="n">distances</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span><span class="o">.</span><span class="n">mark_line</span><span class="p">()</span>
+<span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Y</span><span class="p">(</span><span class="s1">&#39;distance&#39;</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Scale</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span><span class="n">clamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span>
+<span class="o">.</span><span class="n">properties</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Distance between (7,3) &amp; (4,6)&quot;</span><span class="p">)</span>
+
+<span class="n">chart1</span> <span class="o">|</span> <span class="n">chart2</span> 
+</pre></div>
+
+
+<div id="altair-viz-1"></div>
+
+<script type="text/javascript">
+  (function(spec, embedOpt){
+    const outputDiv = document.getElementById("altair-viz-1");
+    const paths = {
+      "vega": "https://cdn.jsdelivr.net/npm//vega@5?noext",
+      "vega-lib": "https://cdn.jsdelivr.net/npm//vega-lib?noext",
+      "vega-lite": "https://cdn.jsdelivr.net/npm//vega-lite@4.0.0?noext",
+      "vega-embed": "https://cdn.jsdelivr.net/npm//vega-embed@6?noext",
+    };
+
+    function loadScript(lib) {
+      return new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = paths[lib];
+        s.async = true;
+        s.onload = () => resolve(paths[lib]);
+        s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
+        document.getElementsByTagName("head")[0].appendChild(s);
+      });
+    }
+
+    function showError(err) {
+      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
+      throw err;
+    }
+
+    function displayChart(vegaEmbed) {
+      vegaEmbed(outputDiv, spec, embedOpt)
+        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
+    }
+
+    if(typeof define === "function" && define.amd) {
+      requirejs.config({paths});
+      require(["vega-embed"], displayChart, err => showError(`Error loading script: ${err.message}`));
+    } else if (typeof vegaEmbed === "function") {
+      displayChart(vegaEmbed);
+    } else {
+      loadScript("vega")
+        .then(() => loadScript("vega-lite"))
+        .then(() => loadScript("vega-embed"))
+        .catch(showError)
+        .then(() => displayChart(vegaEmbed));
+    }
+  })({"config": {"view": {"continuousWidth": 400, "continuousHeight": 300}}, "hconcat": [{"data": {"name": "data-79768d26db46531dea1428000702ea4e"}, "mark": "line", "encoding": {"x": {"type": "quantitative", "field": "p"}, "y": {"type": "quantitative", "field": "distance", "scale": {"clamp": true, "domain": [0, 8]}}}, "title": "Distance between (-2,3) & (2,6)"}, {"data": {"name": "data-4b2f4581c5100485b34e99d8d54f774e"}, "mark": "line", "encoding": {"x": {"type": "quantitative", "field": "p"}, "y": {"type": "quantitative", "field": "distance", "scale": {"clamp": true, "domain": [0, 8]}}}, "title": "Distance between (7,3) & (4,6)"}], "$schema": "https://vega.github.io/schema/vega-lite/v4.0.0.json", "datasets": {"data-79768d26db46531dea1428000702ea4e": [{"distance": 7.0, "p": 1.0}, {"distance": 5.0, "p": 2.0}, {"distance": 4.497941445275415, "p": 3.0}, {"distance": 4.284572294953817, "p": 4.0}, {"distance": 4.174027662897746, "p": 5.0}, {"distance": 4.110704132575835, "p": 6.0}, {"distance": 4.072242319397026, "p": 7.0}, {"distance": 4.04799203437848, "p": 8.0}, {"distance": 4.032307299196485, "p": 9.0}, {"distance": 4.021974149822332, "p": 10.0}, {"distance": 4.015071076052405, "p": 11.0}, {"distance": 4.010408520546921, "p": 12.0}, {"distance": 4.0072309746728, "p": 13.0}, {"distance": 4.005049203883416, "p": 14.0}, {"distance": 4.003541555587008, "p": 15.0}, {"distance": 4.002493952812106, "p": 16.0}, {"distance": 4.001762467080604, "p": 17.0}, {"distance": 4.00124950127245, "p": 18.0}, {"distance": 4.000888386748128, "p": 19.0}, {"distance": 4.000633288976907, "p": 20.0}, {"distance": 4.000452517978709, "p": 21.0}, {"distance": 4.000324052693183, "p": 22.0}, {"distance": 4.0002325216982175, "p": 23.0}, {"distance": 4.000167151528524, "p": 24.0}, {"distance": 4.000120363481176, "p": 25.0}, {"distance": 4.000086808384343, "p": 26.0}, {"distance": 4.000062699176821, "p": 27.0}, {"distance": 4.000045347240692, "p": 28.0}, {"distance": 4.000032838908592, "p": 29.0}, {"distance": 4.000023808890362, "p": 30.0}, {"distance": 4.000017281017835, "p": 31.0}, {"distance": 4.000012555942296, "p": 32.0}, {"distance": 4.000009131705142, "p": 33.0}, {"distance": 4.000006647404717, "p": 34.0}, {"distance": 4.000004843142265, "p": 35.0}, {"distance": 4.000003531476029, "p": 36.0}, {"distance": 4.000002577032979, "p": 37.0}, {"distance": 4.000001881917685, "p": 38.0}, {"distance": 4.000001375250525, "p": 39.0}, {"distance": 4.000001005653586, "p": 40.0}, {"distance": 4.000000735844988, "p": 41.0}, {"distance": 4.000000538744146, "p": 42.0}, {"distance": 4.000000394661681, "p": 43.0}, {"distance": 4.000000289269223, "p": 44.0}, {"distance": 4.000000212130846, "p": 45.0}, {"distance": 4.000000155639524, "p": 46.0}, {"distance": 4.000000114246059, "p": 47.0}, {"distance": 4.000000083899463, "p": 48.0}, {"distance": 4.000000061640429, "p": 49.0}, {"distance": 4.00000004530572, "p": 50.0}], "data-4b2f4581c5100485b34e99d8d54f774e": [{"distance": 0.0, "p": 1.0}, {"distance": 4.242640687119285, "p": 2.0}, {"distance": 0.0, "p": 3.0}, {"distance": 3.5676213450081633, "p": 4.0}, {"distance": 0.0, "p": 5.0}, {"distance": 3.3673861449281186, "p": 6.0}, {"distance": 0.0, "p": 7.0}, {"distance": 3.271523197995773, "p": 8.0}, {"distance": 0.0, "p": 9.0}, {"distance": 3.21532038760888, "p": 10.0}, {"distance": 0.0, "p": 11.0}, {"distance": 3.1783892830778857, "p": 12.0}, {"distance": 0.0, "p": 13.0}, {"distance": 3.152269915959658, "p": 14.0}, {"distance": 0.0, "p": 15.0}, {"distance": 3.1328213472822415, "p": 16.0}, {"distance": 0.0, "p": 17.0}, {"distance": 3.11777767809553, "p": 18.0}, {"distance": 0.0, "p": 19.0}, {"distance": 3.1057947715241325, "p": 20.0}, {"distance": 0.0, "p": 21.0}, {"distance": 3.096024839202629, "p": 22.0}, {"distance": 0.0, "p": 23.0}, {"distance": 3.087906709930476, "p": 24.0}, {"distance": 0.0, "p": 25.0}, {"distance": 3.0810541521263177, "p": 26.0}, {"distance": 0.0, "p": 27.0}, {"distance": 3.0751926358976234, "p": 28.0}, {"distance": 0.0, "p": 29.0}, {"distance": 3.0701216759903245, "p": 30.0}, {"distance": 0.0, "p": 31.0}, {"distance": 3.06569144596235, "p": 32.0}, {"distance": 0.0, "p": 33.0}, {"distance": 3.06178772873876, "p": 34.0}, {"distance": 0.0, "p": 35.0}, {"distance": 3.0583219311064345, "p": 36.0}, {"distance": 0.0, "p": 37.0}, {"distance": 3.0552242798223057, "p": 38.0}, {"distance": 0.0, "p": 39.0}, {"distance": 3.0524390763080596, "p": 40.0}, {"distance": 0.0, "p": 41.0}, {"distance": 3.0499213181758065, "p": 42.0}, {"distance": 0.0, "p": 43.0}, {"distance": 3.0476342493166544, "p": 44.0}, {"distance": 0.0, "p": 45.0}, {"distance": 3.045547553851045, "p": 46.0}, {"distance": 0.0, "p": 47.0}, {"distance": 3.0436360048125706, "p": 48.0}, {"distance": 0.0, "p": 49.0}, {"distance": 3.0418784393700875, "p": 50.0}]}}, {"mode": "vega-lite"});
+</script>
+
+<p>The code below visually explores the different decision boundries formed by varying p in Minkowski distance. We also explore how our performance varies on the test set.</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">altair</span> <span class="k">as</span> <span class="nn">alt</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">KNeighborsClassifier</span><span class="p">,</span> <span class="n">DistanceMetric</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">make_moons</span><span class="p">,</span> <span class="n">make_circles</span><span class="p">,</span> <span class="n">make_classification</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span><span class="p">,</span> <span class="n">roc_auc_score</span>
+<span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">make_blobs</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="c1"># Generate our data</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">1_000</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_redundant</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_informative</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1</span>
+                           <span class="p">,</span> <span class="n">n_clusters_per_class</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span> <span class="n">X</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">y</span><span class="o">=</span><span class="n">X</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;magma&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span><span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Input Data&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<p><img alt="png" src="images/output_7_0.png"></p>
+<div class="highlight"><pre><span></span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">117</span><span class="p">)</span>
+
+<span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">()]</span>
+
+<span class="k">def</span> <span class="nf">knn</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">p</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;minkowski&#39;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">Z</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Z</span><span class="p">,</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)),</span> <span class="n">roc_auc_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">))</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">set_figwidth</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">set_figheight</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">distances</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">100000000</span><span class="p">]</span>
+<span class="n">accuracy</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">auc</span><span class="o">=</span><span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">distances</span><span class="p">):</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">Z</span><span class="p">,</span><span class="n">acc</span><span class="p">,</span><span class="n">roc</span> <span class="o">=</span> <span class="n">knn</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="n">val</span><span class="p">,</span><span class="n">X_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.35</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;P = </span><span class="si">{val}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">accuracy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acc</span><span class="p">)</span>
+    <span class="n">auc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">roc</span><span class="p">)</span>
+</pre></div>
+
+
+<p><img alt="png" src="images/output_9_0.png"></p>
+<div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">accuracy</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">auc</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="s1">&#39;1&#39;</span><span class="p">,</span><span class="s1">&#39;2&#39;</span><span class="p">,</span><span class="s1">&#39;3&#39;</span><span class="p">,</span><span class="s1">&#39;5&#39;</span><span class="p">,</span><span class="s1">&#39;50&#39;</span><span class="p">,</span><span class="s1">&#39;100000000&#39;</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Changes in Accuracy &amp; ROC AUC with increasing P &quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;P&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s1">&#39;Accuracy&#39;</span><span class="p">,</span><span class="s1">&#39;ROC AUC&#39;</span><span class="p">]);</span>
+</pre></div>
+
+
+<p><img alt="png" src="images/output_10_0_1.png"></p>
+<p>We can observe stark changes to the shapes of the decision boundary and to performance as p varies. However these trends can not be generalized, and performance depends on the shape of the input data.</p>
+    </div>
+  </article>
+
+
+
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="./authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="./archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="./categories.html">Categories</a></li>
+      <li class="list-inline-item"><a href="./tags.html">Tags</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+
+</body>
+
+</html>
